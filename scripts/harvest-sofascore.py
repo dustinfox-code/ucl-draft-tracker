@@ -1,33 +1,37 @@
 #!/usr/bin/env python3
 # ============================================================================
-# Harvest Sofascore match-page URLs for the 2026 World Cup → data/sofascore.json
+# Harvest Sofascore match-page URLs for UCL 2026-27 → data/sofascore.json
 #
 # The working CLI path. Sofascore blocks on TLS fingerprint (plain Node/curl
 # get 403 even from a residential IP), so this uses curl_cffi to impersonate a
 # Chrome TLS handshake:
 #
-#   pip install curl_cffi        (once)
+#   pip install curl_cffi        (once; venv works too)
 #   python3 scripts/harvest-sofascore.py
 #
-# URL STABILITY — a placeholder slot ("w98-w97") gets a NEW slug + customId
-# the moment its real teams are known (both are derived from the two teams),
-# and the old placeholder URL 404s — verified 2026-07-06 when the pre-harvested
-# R16 placeholder links all died. So undrawn slots are emitted as
-# https://www.sofascore.com/event/{numeric id} instead: the numeric event id is
-# the one identifier that survives the draw (the slot is the same pre-created
-# event), and /event/{id} 301s to the canonical match page whatever it
-# currently is. Resolved matches get their direct canonical URL (stable, no
-# redirect hop). Net effect: one run covers the tournament; re-run only if
-# fixtures are added/rescheduled, or cosmetically to upgrade /event/{id} links
-# to direct URLs after a draw.
+# URL STABILITY — a placeholder slot gets a NEW slug + customId the moment its
+# real teams are known (both are derived from the two teams), and the old
+# placeholder URL 404s — learned the hard way in the WC repo (2026-07-06) when
+# every pre-harvested R16 placeholder link died. So undrawn slots are emitted
+# as https://www.sofascore.com/event/{numeric id}: the numeric event id is the
+# one identifier that survives the draw, and /event/{id} 301s to the canonical
+# match page whatever it currently is. Resolved matches get their direct
+# canonical URL (stable, no redirect hop).
 #
-# SOURCES (same as the browser-console scripts):
-#   /api/v1/unique-tournament/16/season/58210/events/{last,next}/{page}
-#     group + resolved games; page from 0 until 404 (~16 events/page)
-#   /api/v1/unique-tournament/16/season/58210/cuptrees → knockout event ids
+# SOURCES:
+#   /api/v1/unique-tournament/7/season/96518/events/{last,next}/{page}
+#     league phase + resolved games; page from 0 until 404 (~16 events/page)
+#   /api/v1/unique-tournament/7/season/96518/cuptrees → knockout event ids
 #   /api/v1/event/{id} → customId, slug, teams for every knockout slot
-#   16 = FIFA World Cup (men), 58210 = the 2026 season. New season id (if
-#   ever): /api/v1/unique-tournament/16/seasons
+#   7 = UEFA Champions League, 96518 = the 2026/27 season. New season id (if
+#   ever): /api/v1/unique-tournament/7/seasons
+#
+# The 26/27 "season" on Sofascore also contains July/August qualifying rounds
+# (81 clubs!), so events before MIN_TS (league-phase start) are skipped —
+# qualifiers would otherwise leak in as half-resolved placeholder entries.
+# Club nameCodes collide across the wider feed (VIK = Viking AND Víkingur
+# Reykjavík, SHA = Shakhtar AND Shamrock Rovers), so resolution goes full
+# name first, alias second, nameCode last.
 #
 # The season feed can drop an event or two when a page boundary shifts under
 # live matches, so entries already in data/sofascore.json that are fully
@@ -42,32 +46,46 @@ try:
 except ImportError:
     sys.exit("curl_cffi is required: pip install curl_cffi")
 
-UT, SEASON = 16, 58210
+UT, SEASON = 7, 96518
+MIN_TS = int(datetime(2026, 9, 1, tzinfo=timezone.utc).timestamp())  # skip qualifying rounds
 BASE = "https://www.sofascore.com"
 OUT = Path(__file__).resolve().parent.parent / "data" / "sofascore.json"
 
-# Mirrors NAME_TO_CODE in index.html and the console scripts.
-KNOWN = set("ARG ESP ENG FRA BRA GER POR MEX COL BEL NED NOR SUI CAN TUR ECU URU USA CRO JPN MAR SEN PAR AUT EGY SCO CZE KOR BIH IRN CIV SWE ALG PAN AUS COD RSA UZB NZL TUN KSA CPV GHA JOR HAI IRQ QAT CUW".split())
+# Internal club codes (mirrors data/teams.json and index.html).
+KNOWN = set("AEK ROM ARS AVL ATM BAR BAY BOD BVB BRU COM BET FEN FEY GAL INT LSK LEN LIL LIV MCI MUN NAP POR PSG PSV RBL RMA SAB SHK SLA SLO SCP VFB VIK VIL".split())
 NAME_TO_CODE = {
-    "Argentina":"ARG","Spain":"ESP","England":"ENG","France":"FRA","Brazil":"BRA",
-    "Germany":"GER","Portugal":"POR","Mexico":"MEX","Colombia":"COL","Belgium":"BEL",
-    "Netherlands":"NED","Norway":"NOR","Switzerland":"SUI","Canada":"CAN",
-    "Turkey":"TUR","Türkiye":"TUR","Turkiye":"TUR",
-    "Ecuador":"ECU","Uruguay":"URU","USA":"USA","United States":"USA",
-    "Croatia":"CRO","Japan":"JPN","Morocco":"MAR","Senegal":"SEN","Paraguay":"PAR",
-    "Austria":"AUT","Egypt":"EGY","Scotland":"SCO","Czechia":"CZE","Czech Republic":"CZE",
-    "South Korea":"KOR","Korea Republic":"KOR","Korea, South":"KOR",
-    "Bosnia & Herzegovina":"BIH","Bosnia and Herzegovina":"BIH","Bosnia-Herzegovina":"BIH",
-    "Iran":"IRN","IR Iran":"IRN",
-    "Ivory Coast":"CIV","Côte d'Ivoire":"CIV","Cote d'Ivoire":"CIV",
-    "Sweden":"SWE","Algeria":"ALG","Panama":"PAN","Australia":"AUS",
-    "DR Congo":"COD","Congo DR":"COD","Democratic Republic of Congo":"COD",
-    "South Africa":"RSA","Uzbekistan":"UZB","New Zealand":"NZL","Tunisia":"TUN",
-    "Saudi Arabia":"KSA","Cape Verde":"CPV","Cabo Verde":"CPV",
-    "Ghana":"GHA","Jordan":"JOR","Haiti":"HAI","Iraq":"IRQ","Qatar":"QAT",
-    "Curaçao":"CUW","Curacao":"CUW",
+    "AEK Athens":"AEK","AS Roma":"ROM","Arsenal":"ARS","Aston Villa":"AVL",
+    "Atlético Madrid":"ATM","Atletico Madrid":"ATM",
+    "Bodø/Glimt":"BOD","Bodo/Glimt":"BOD","FK Bodø/Glimt":"BOD",
+    "Borussia Dortmund":"BVB","Club Brugge KV":"BRU","Club Brugge":"BRU",
+    "Como":"COM","Como 1907":"COM",
+    "FC Barcelona":"BAR","Barcelona":"BAR",
+    "FC Bayern München":"BAY","Bayern München":"BAY","Bayern Munich":"BAY",
+    "FC Porto":"POR","Porto":"POR",
+    "Fenerbahçe":"FEN","Fenerbahce":"FEN",
+    "Feyenoord":"FEY","Galatasaray":"GAL",
+    "Inter":"INT","Inter Milan":"INT","FC Internazionale":"INT",
+    "LASK":"LSK","LASK Linz":"LSK",
+    "Lille":"LIL","Lille OSC":"LIL",
+    "Liverpool FC":"LIV","Liverpool":"LIV",
+    "Manchester City":"MCI","Manchester United":"MUN",
+    "PSV Eindhoven":"PSV","PSV":"PSV",
+    "Paris Saint-Germain":"PSG","RB Leipzig":"RBL",
+    "RC Lens":"LEN","Lens":"LEN",
+    "Real Betis":"BET","Real Madrid":"RMA",
+    "SK Slavia Praha":"SLA","Slavia Praha":"SLA","Slavia Prague":"SLA",
+    "SSC Napoli":"NAP","Napoli":"NAP",
+    "Sabah FK":"SAB","Sabah":"SAB",
+    "Shakhtar Donetsk":"SHK",
+    "Sporting CP":"SCP","Sporting Lisbon":"SCP",
+    "VfB Stuttgart":"VFB","Stuttgart":"VFB",
+    "Viking FK":"VIK","Viking":"VIK",
+    "Villarreal":"VIL","Villarreal CF":"VIL",
+    "ŠK Slovan Bratislava":"SLO","Slovan Bratislava":"SLO",
 }
-CODE_ALIAS = {}  # fill if it warns about an unresolved nameCode, e.g. "DRC":"COD"
+# Sofascore nameCode → our code, where they differ (name match wins first).
+CODE_ALIAS = {"B/G":"BOD","LASK":"LSK","SBH":"SAB","SHA":"SHK","RCL":"LEN",
+              "FCB":"BAY","FCP":"POR","ASR":"ROM"}
 
 sess = requests.Session(impersonate="chrome")
 
@@ -76,19 +94,28 @@ def get(path):
 
 def code(t):
     if not t: return None
+    byname = NAME_TO_CODE.get(t.get("name"))
+    if byname: return byname
     nc = t.get("nameCode")
     if nc and nc in CODE_ALIAS: return CODE_ALIAS[nc]
     if nc and nc in KNOWN: return nc
-    return NAME_TO_CODE.get(t.get("name"))
+    return None
 
-# Placeholder bracket slots before teams are known ("2A", "w74", "L77", "3A/3B").
+# Placeholder bracket slots before teams are known. Club names can legitimately
+# contain digits and slashes (Bodø/Glimt), so this is deliberately narrow:
+# w98/L12-style tokens, "Winner/Loser of …", and seed-pair labels like "9/10".
 def is_placeholder(n):
-    return (not n) or bool(re.search(r"[0-9/]", n))
+    if not n: return True
+    if re.fullmatch(r"[WL]\d+", n, re.I): return True
+    if re.search(r"\b(winner|loser|play-?off|seed)\b", n, re.I): return True
+    if re.fullmatch(r"\d{1,2}(st|nd|rd|th)?([-/]\d{1,2}(st|nd|rd|th)?)*( place)?", n, re.I): return True
+    return False
 
 by_id, unresolved = {}, set()
 
 def consider(e):
     if not e or not e.get("id") or not e.get("customId") or not e.get("slug") or not e.get("startTimestamp"): return
+    if e["startTimestamp"] < MIN_TS: return  # qualifying rounds
     c1, c2 = code(e.get("homeTeam")), code(e.get("awayTeam"))
     for c, t in ((c1, e.get("homeTeam")), (c2, e.get("awayTeam"))):
         if not c and t and not is_placeholder(t.get("name")):
@@ -102,7 +129,7 @@ def consider(e):
     if not prev or len(entry["c"]) > len(prev["c"]):
         by_id[e["id"]] = entry
 
-# ---- A) season feed: group + already-resolved games ------------------------
+# ---- A) season feed: league phase + already-resolved games ------------------
 feed_count = 0
 for kind in ("last", "next"):
     for page in range(50):
@@ -172,4 +199,4 @@ if unresolved:
     print(f"⚠ unresolved teams (add to NAME_TO_CODE / CODE_ALIAS, then re-run):\n  " + "\n  ".join(sorted(unresolved)))
 if not events:
     print("⚠ no matches found — if every request 403'd, curl_cffi may need an update; "
-          "if every page 404'd, the season id may have changed (check /api/v1/unique-tournament/16/seasons).")
+          "if every page 404'd, the season id may have changed (check /api/v1/unique-tournament/7/seasons).")
