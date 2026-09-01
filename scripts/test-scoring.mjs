@@ -42,7 +42,7 @@ const ctx = vm.createContext({
   console,
 });
 vm.runInContext(src + `
-;globalThis.__api = { computeTies, computeScores, maxPointsLeft, koMeta, TEAMS, ROSTERS,
+;globalThis.__api = { computeTies, computeScores, maxPointsLeft, maxLeftForTeam, koMeta, TEAMS, ROSTERS,
   PLAYOFF_WIN_PTS, BYE_PTS, KO_WIN_PTS, CHAMP_BONUS, LEAGUE_ROUND };`, ctx);
 const A = ctx.__api;
 
@@ -141,6 +141,57 @@ const M = (round, home, away, hs, as, opts = {}) => ({
   // per team: 8 games ×1.5 + bye 6 + R16/QF/SF wins 15 = 33; +10 once for a champion
   const want = 3 * (12 + A.BYE_PTS + 3 * A.KO_WIN_PTS) + (A.KO_WIN_PTS + A.CHAMP_BONUS);
   eq("pre-season max bound", A.maxPointsLeft("Dustin Fox", S, []), want);
+  A.ROSTERS["Dustin Fox"].length = 0;
+}
+
+// --- 5. clinch / elimination bounds (mid-league-phase) ------------------------
+// Construction: pairs of teams play only each other (matchday validity doesn't
+// matter to the engine). 8 "sweep" pairs (24 pts vs 0, gp 8), 9 "split" pairs
+// (12 pts each, gp 8), and one pair with 7 draws (7 pts, gp 7 → league not
+// done). Expected bound outcomes, teams indexed in TEAMS order:
+//   sweep winners: exactly 7 rivals can still reach ≥24 → clinch8 + unconf 6
+//   split teams (12 pts, maxP 12): 8 teams already above ceiling → elim8,
+//     but only 8 < 24 above → NOT out; 25 catchers → no clinch24
+//   sweep losers (0 pts, gp 8): 28 teams above ceiling → out
+{
+  const codes = A.TEAMS.map(t => t.code);
+  const ms = [];
+  const playN = (a, b, results) => results.forEach(([x, y], g) => ms.push(M(A.LEAGUE_ROUND, a, b, x, y, { md: g + 1 })));
+  for (let p = 0; p < 8; p++)  playN(codes[2*p], codes[2*p+1], Array.from({length:8}, () => [2, 0]));
+  for (let p = 8; p < 17; p++) playN(codes[2*p], codes[2*p+1], Array.from({length:8}, (_, g) => g % 2 ? [0, 1] : [1, 0]));
+  playN(codes[34], codes[35], Array.from({length:7}, () => [1, 1]));
+  const S = A.computeScores(ms, []);
+  eq("league not done (one pair on 7 games)", S.leagueDone, false);
+  const winner = S.T[codes[0]], splitT = S.T[codes[16]], loser = S.T[codes[1]], drawT = S.T[codes[34]];
+  eq("sweep winner pts", winner.realPts, 24);
+  eq("sweep winner clinch8", winner.clinch8, true);
+  eq("sweep winner unconf +6", winner.unconf, A.BYE_PTS);
+  eq("sweep winner not banked yet", winner.top8, false);
+  eq("split team pts", splitT.realPts, 12);
+  eq("split team elim8", splitT.elim8, true);
+  eq("split team not out", splitT.out, false);
+  eq("split team no clinch24", splitT.clinch24, false);
+  eq("sweep loser out", loser.out, true);
+  eq("7-draw team out (max 10 < 26 rivals)", drawT.out, true);
+  // elimination-aware max bounds
+  const wMax = A.maxLeftForTeam(codes[0], S, []);
+  eq("clinched-top8 max nc (bye + R16/QF/SF)", wMax.nc, A.BYE_PTS + 3*A.KO_WIN_PTS);
+  eq("clinched-top8 max ch (+final 10)", wMax.ch, A.BYE_PTS + 4*A.KO_WIN_PTS + A.CHAMP_BONUS);
+  const sMax = A.maxLeftForTeam(codes[16], S, []);
+  eq("elim8 max nc = playoff route", sMax.nc, A.PLAYOFF_WIN_PTS + 3*A.KO_WIN_PTS);
+  eq("elim8 max ch", sMax.ch, A.PLAYOFF_WIN_PTS + 4*A.KO_WIN_PTS + A.CHAMP_BONUS);
+  eq("out team max = 0", A.maxLeftForTeam(codes[1], S, []).nc, 0);
+
+  // --- 6. same-tie collision in the manager max bound -------------------------
+  A.ROSTERS["Dustin Fox"].push(codes[0], codes[2]); // two clinched-top-8 winners
+  const perTeam = A.BYE_PTS + 3*A.KO_WIN_PTS; // 21 each, champ gain +10
+  eq("mgr max, no shared tie", A.maxPointsLeft("Dustin Fox", S, []),
+     2*perTeam + A.KO_WIN_PTS + A.CHAMP_BONUS);
+  const tieLeg = M("round-of-16", codes[0], codes[2], 1, 1);
+  const ties = A.computeTies([tieLeg]);
+  eq("tie undecided", ties[0].done, false);
+  eq("mgr max, roster teams share an undecided tie", A.maxPointsLeft("Dustin Fox", S, ties),
+     perTeam + A.KO_WIN_PTS + A.CHAMP_BONUS);
   A.ROSTERS["Dustin Fox"].length = 0;
 }
 

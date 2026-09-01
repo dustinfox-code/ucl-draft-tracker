@@ -127,14 +127,25 @@ node scripts/test-scoring.mjs       # scoring engine fixtures + headless boot/re
 
 Run both before committing changes to either HTML file.
 
-## Known deferrals (v2)
+## v2 features
 
-- **Visual knockout bracket + exact max-points tree DP**: the KO bracket is a
-  seeded tree, but ESPN's KO fixture shape isn't observable until ties are
-  drawn (February). Until then the Knockout tab lists ties by round, and "Max
-  possible total" is an optimistic upper bound (one champion per roster, no
-  same-half collision handling). The WC repo's `maxKOsubtree` DP is the
-  template when the tree exists.
-- **Top-8 clinch detection**: clinching top-8/top-24 in a 36-team Swiss table
-  is an LP/max-flow problem, not the WC's 4-team brute force. The 6-pt bye
-  banks when the league phase completes; no "unconfirmed points" before that.
+- **Knockout bracket panel**: tie-level columns (play-offs → final) with
+  aggregate scores, per-leg results, deciding-leg shootouts as superscripts,
+  live cells, owner chips, and Sofascore links. Ties appear as they're drawn;
+  undrawn slots render as dashed TBD cells, so the bracket fills in round by
+  round with no code changes.
+- **Clinch / elimination detection** (league phase): conservative,
+  points-only bounds — a rival "can still catch" a team when its
+  3-per-game ceiling reaches the team's current points (ties count as
+  caught), and a team is "passed" only by rivals already above its ceiling.
+  Sound by construction: can fire a matchday late, never wrongly. (Exact
+  Swiss-table clinching with 3/1/0 points is NP-hard — Kern & Paulusma — so
+  exactness isn't on the table.) Drives: the gold **unconfirmed +6** badge
+  for clinched top-8 finishes, 🔒/✓/✕ markers in the league table, and
+  tighter "max possible" bounds (elim-from-top-8 teams drop to the play-off
+  route; out teams to zero).
+- **Same-tie collision handling** in "Max possible total": two roster clubs
+  meeting in an undecided tie count once, not twice. Remaining looseness:
+  undrawn future rounds are capped only by the one-champion rule (an exact
+  seeded-tree DP would need the published bracket; the WC repo's
+  `maxKOsubtree` is the template if that itch needs scratching in February).

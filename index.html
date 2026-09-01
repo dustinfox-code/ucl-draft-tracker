@@ -108,6 +108,34 @@
     #standings{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
     #standings .mgr-row{margin-bottom:0}
   }
+
+  .unconf{color:var(--gold);border-bottom:1px dotted currentColor;cursor:help;font-weight:700}
+  .lock{cursor:help;font-size:.7rem;margin-left:2px;vertical-align:middle}
+
+  /* ===== knockout bracket (tie-level columns; ties are two-legged) ===== */
+  .bk-scroll{overflow-x:auto;padding:4px 2px 8px;scrollbar-color:var(--track) transparent}
+  .bk-cols{display:flex;gap:14px;width:max-content;align-items:flex-start}
+  .bk-col{width:196px;flex:none}
+  .bk-rl{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);font-weight:700;margin-bottom:6px;text-align:center}
+  .bk-cell{background:var(--card2);border:1px solid #2a3542;border-radius:8px;padding:6px 8px;margin-bottom:8px}
+  .bk-cell.bk-live{border-color:#5a2c33;background:linear-gradient(110deg,#2a1c1f,var(--card2))}
+  .bk-cell.bk-hasfoll{border-color:#5a4a22;box-shadow:0 0 0 1px #e3b34122}
+  .bk-cell.bk-tbdcell{border-style:dashed;color:var(--muted);text-align:center;font-size:.68rem;padding:12px 8px}
+  .bk-team{display:flex;align-items:center;gap:5px;height:21px;font-size:.74rem}
+  .bk-nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .bk-sc{min-width:20px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums;flex:none}
+  .bk-sc sup{font-size:.58rem;color:var(--muted);font-weight:700;margin-left:1px}
+  .bk-team.bk-win .bk-nm{color:#fff}
+  .bk-team.bk-win .bk-sc{color:var(--green)}
+  .bk-team.bk-lose{opacity:.45}
+  .bk-team .owner{vertical-align:0}
+  .bk-foot{margin-top:3px;font-size:.55rem;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+  .bk-foot .bk-liveT{color:var(--red);font-weight:700}
+  .bk-sofa{color:var(--muted);text-decoration:none}
+  .bk-sofa:hover{color:var(--gold)}
+  .bk-finalcol .bk-cell:not(.bk-tbdcell){border-color:#caa53e;background:linear-gradient(120deg,#241f12,var(--card2))}
+  .bk-champ{text-align:center;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+  .bk-champ b{color:var(--gold);display:block;font-size:.8rem;margin-top:2px;text-transform:none;letter-spacing:0;line-height:1.2}
 </style>
 </head>
 <body>
@@ -134,6 +162,12 @@
     <h2>League standings <span class="small" style="margin:0">click a manager for breakdown</span></h2>
     <div id="standings"></div>
     <p class="small" id="scoringNote"></p>
+  </div>
+
+  <div class="panel">
+    <h2><span>Knockout bracket</span> <span class="small" style="margin:0;font-weight:400;text-transform:none;letter-spacing:0">two-legged ties on aggregate · winner in bold · ↗ opens Sofascore</span></h2>
+    <div class="bk-scroll"><div id="bracket"></div></div>
+    <p class="small">Aggregate scores shown per tie (superscript = shootout on the deciding leg). Ties appear as they're drawn; slots not yet drawn show as TBD. Owner chips show who drafted each club.</p>
   </div>
 
   <div class="cols">
@@ -488,7 +522,8 @@ function computeTies(ms){
 // ============================================================================
 function computeScores(ms, ties){
   const T = {}; TEAMS.forEach(t=>T[t.code]={code:t.code, realPts:0, gW:0,gD:0,gL:0, gp:0, gf:0, ga:0,
-    top8:false, koWins:[], koPts:0, pts:0, champion:false, out:false, pos:null});
+    top8:false, koWins:[], koPts:0, pts:0, champion:false, out:false, pos:null,
+    clinch8:false, clinch24:false, elim8:false, unconf:0});
   for(const m of ms){
     if(!isLeague(m)) continue;
     const fs = finalScore(m); if(!fs) continue;
@@ -504,7 +539,30 @@ function computeScores(ms, ties){
   table.forEach((t,i)=>t.pos=i+1);
   const leagueDone = table.every(t=>t.gp>=8);
   if(leagueDone){
-    table.forEach(t=>{ t.top8 = t.pos<=8; t.out = t.pos>24; });
+    table.forEach(t=>{ t.top8 = t.pos<=8; t.out = t.pos>24; t.clinch8 = t.top8; t.clinch24 = t.pos<=24; });
+  } else {
+    // Clinch / elimination bounds — conservative and SOUND (points-only, no
+    // tiebreak modeling): a rival "can still catch" a team whenever the
+    // rival's 3-pts-per-remaining-game ceiling reaches the team's CURRENT
+    // points (equal points count as caught — GD could break either way), and
+    // a team is only "already passed" by rivals whose banked points exceed
+    // its own ceiling. Exact Swiss-table clinching is NP-hard (soccer
+    // elimination with 3/1/0 points), so these bounds can fire a matchday
+    // late but never fire wrongly.
+    const maxP = t => t.realPts + 3*Math.max(0, 8 - t.gp);
+    for(const t of table){
+      let canCatch = 0, passed = 0;
+      for(const u of table){
+        if(u===t) continue;
+        if(maxP(u) >= t.realPts) canCatch++;
+        if(u.realPts > maxP(t)) passed++;
+      }
+      t.clinch8  = canCatch <= 7;
+      t.clinch24 = canCatch <= 23;
+      t.elim8    = passed >= 8;
+      if(passed >= 24) t.out = true;              // mathematically out of the top 24
+      t.unconf   = t.clinch8 ? BYE_PTS : 0;       // bye locked, banks when the phase completes
+    }
   }
   for(const tie of ties){
     if(!tie.done || !tie.winner) continue;
@@ -536,6 +594,10 @@ function maxLeftForTeam(code, S, ties){
   const remLg = 1.5*Math.max(0, 8 - t.gp);
   const wonKeys = new Set(t.koWins.map(km=>km.key));
   if(!S.leagueDone){
+    if(t.elim8){ // top-8 gone: best case is the play-off route
+      const nc = remLg + PLAYOFF_WIN_PTS + 3*KO_WIN_PTS;
+      return {nc, ch: nc + KO_WIN_PTS + CHAMP_BONUS};
+    }
     // best case: top-8 bye, then win R16/QF/SF (+15), final win worth 10 more
     return {nc: remLg + BYE_PTS + 3*KO_WIN_PTS, ch: remLg + BYE_PTS + 3*KO_WIN_PTS + KO_WIN_PTS + CHAMP_BONUS};
   }
@@ -554,13 +616,81 @@ function maxLeftForTeam(code, S, ties){
 }
 function maxPointsLeft(mgrName, S, ties){
   const codes = ROSTERS[mgrName]||[];
+  const own = new Set(codes);
+  const M = {};
   let sum=0, bestChampGain=0;
   for(const c of codes){
-    const {nc, ch} = maxLeftForTeam(c, S, ties);
-    sum += nc;
-    bestChampGain = Math.max(bestChampGain, ch-nc);
+    M[c] = maxLeftForTeam(c, S, ties);
+    sum += M[c].nc;
+    bestChampGain = Math.max(bestChampGain, M[c].ch - M[c].nc);
+  }
+  // Same-tie collision: when two roster teams meet in an undecided tie only
+  // the winner keeps a path forward, so the pair counts once, not twice.
+  for(const tie of ties){
+    if(tie.done) continue;
+    if(own.has(tie.a) && own.has(tie.b)) sum -= Math.min(M[tie.a].nc, M[tie.b].nc);
   }
   return sum + bestChampGain;
+}
+
+// ============================================================================
+// Knockout bracket — tie-level columns (PO → R16 → QF → SF → Final). Cells
+// show the aggregate (bold winner, superscript pens on the deciding leg),
+// per-leg scores, and live state. A tie only enters the data once both its
+// teams are known, so columns fill in round by round as draws happen; the
+// expected slot counts render as dashed TBD cells until then.
+// ============================================================================
+const BK_EXPECT = {po:8, r16:8, qf:4, sf:2, fin:1};
+
+function bkTieCell(t, now, followed){
+  const liveLeg = t.legs.find(m=>status(m,now)==="live");
+  const lastLeg = t.legs[t.legs.length-1];
+  const nextLeg = t.legs.find(m=>!finalScore(m));
+  const hasFoll = followed.has(t.a)||followed.has(t.b);
+  const anyScore = t.legs.some(m=>finalScore(m)) || (liveLeg && liveLeg.hs!=null);
+  const row = code => {
+    const won = t.winner===code, lost = !!t.winner && t.winner!==code;
+    let agg = t.agg[code];
+    if(liveLeg && liveLeg.hs!=null) agg += (liveLeg.home===code ? liveLeg.hs : liveLeg.as);
+    const so = (t.done && t.winner && lastLeg.hso!=null)
+      ? `<sup>${lastLeg.home===code ? lastLeg.hso : lastLeg.aso}</sup>` : "";
+    return `<div class="bk-team ${won?"bk-win":""} ${lost?"bk-lose":""}">${crest(code)}<span class="bk-nm" title="${BY_CODE[code].name}">${BY_CODE[code].name}</span>${ownerChip(code)}<span class="bk-sc">${anyScore?agg:""}${so}</span></div>`;
+  };
+  const legStr = t.legs.map(m=>{
+    const fs=finalScore(m);
+    if(fs) return `${fs[0]}–${fs[1]}`;
+    return (status(m,now)==="live" && m.hs!=null) ? `${m.hs}–${m.as}′` : null;
+  }).filter(Boolean).join(" · ");
+  let mid;
+  if(liveLeg) mid = `<span class="bk-liveT">LIVE ${liveLeg._live&&liveLeg._live.detail||""}</span>`;
+  else if(t.done) mid = lastLeg.hso!=null ? "pens" : (t.km.legs>1 ? "agg" : "FT");
+  else if(nextLeg) mid = `${t.km.legs>1?`leg ${t.legs.indexOf(nextLeg)+1} · `:""}${fmtDT(kickoff(nextLeg))}`;
+  else mid = "";
+  const linkLeg = liveLeg || (t.done ? lastLeg : (t.legs.slice().reverse().find(m=>finalScore(m)) || null));
+  const su = linkLeg ? sofaUrl(linkLeg) : null;
+  const arrow = su ? ` <a class="bk-sofa" href="${su}" target="_blank" rel="noopener" title="Live stats &amp; summary on Sofascore">↗</a>` : "";
+  return `<div class="bk-cell ${liveLeg?"bk-live":""}${hasFoll?" bk-hasfoll":""}">${row(t.a)}${row(t.b)}<div class="bk-foot"><span>${t.km.legs>1?legStr:""}</span><span>${mid}${arrow}</span></div></div>`;
+}
+
+function renderBracket(ties, now){
+  const host = document.getElementById("bracket"); if(!host) return;
+  if(!ties.length){
+    host.innerHTML = `<p class="small">The bracket fills in as ties are drawn — knockout play-offs (seeds 9–24) are drawn after the league phase ends in January; top-8 clubs skip straight to the Round of 16.</p>`;
+    return;
+  }
+  const followed = followedCodes();
+  const finTie = ties.find(t=>t.km.key==="fin");
+  const champ = finTie && finTie.winner;
+  host.innerHTML = `<div class="bk-cols">` + KO_META_LIST.map(km=>{
+    const list = ties.filter(t=>t.km===km).sort((a,b)=>a.legs[0].ts-b.legs[0].ts);
+    const tbd = Math.max(0, (BK_EXPECT[km.key]||0) - list.length);
+    return `<div class="bk-col ${km.key==="fin"?"bk-finalcol":""}">
+      <div class="bk-rl">${km.label}</div>
+      ${list.map(t=>bkTieCell(t, now, followed)).join("")}
+      ${tbd ? `<div class="bk-cell bk-tbdcell">${tbd === (BK_EXPECT[km.key]||0) ? "not drawn yet" : `${tbd} tie${tbd>1?"s":""} TBD`}</div>` : ""}
+      ${km.key==="fin" ? `<div class="bk-champ">Champion<b>${champ?`${crest(champ)} ${BY_CODE[champ].name} 🏆`:"to be decided 🏆"}</b></div>` : ""}
+    </div>`;
+  }).join("") + `</div>`;
 }
 
 // ============================================================================
@@ -644,7 +774,8 @@ function render(){
   document.getElementById("updated").innerHTML = MATCHES.size ? `${LOADED_FROM} · ${optaNote}${warn} · upd ${fmtTime(now)}` : "loading…";
 
   document.getElementById("scoringNote").innerHTML =
-    `Scoring: league-phase win 1.5 · draw 0.5 (= half the real table points) · top-8 finish +6 (knockout bye) · each knockout-round win +5${PLAYOFF_WIN_PTS!==KO_WIN_PTS?` (play-off win ${PLAYOFF_WIN_PTS})`:""} · winning the final +10 (5 win + 5 champion bonus). The top-8 bye banks when the league phase completes in January.<br>
+    `Scoring: league-phase win 1.5 · draw 0.5 (= half the real table points) · top-8 finish +6 (knockout bye) · each knockout-round win +5${PLAYOFF_WIN_PTS!==KO_WIN_PTS?` (play-off win ${PLAYOFF_WIN_PTS})`:""} · winning the final +10 (5 win + 5 champion bonus).
+    A gold <span class="unconf">+6</span> = <b>unconfirmed</b>: a top-8 finish the club has mathematically clinched (points-only bound — never wrong, occasionally a matchday late) that banks when the league phase completes in January. Standings rank by banked points only.<br>
     "Proj" = expected final total under the Opta supercomputer's nightly-updated probabilities (banked results are reflected — resolved rounds go to 0/100%). "vs draft" compares to the draft-day expectation — whose draft is aging well.`;
 
   // --- "On now / Up next" — global, ignores the follow selection
@@ -716,12 +847,17 @@ function render(){
       }).join("")}`;
   } else heroBody.innerHTML = `<p class="small" style="margin-top:4px">No upcoming matches for this selection${Object.values(ROSTERS).every(r=>!r.length)?" — rosters land after draft night":""}.</p>`;
 
+  // --- knockout bracket
+  renderBracket(ties, now);
+
   // --- topbar + standings
+  const uBadge = u => u ? ` <span class="unconf" title="Unconfirmed: mathematically clinched a top-8 finish (+6 bye) — banks when the league phase completes in January">+${u}</span>` : "";
   const totals = MANAGERS.map(mgr=>{
     const codes=ROSTERS[mgr.name]||[];
     const pts = codes.reduce((s,c)=>s+T[c].pts,0);
     const maxLeft = maxPointsLeft(mgr.name, S, ties);
     return {mgr, pts, maxLeft, ceiling: pts+maxLeft,
+      unconf: codes.reduce((s,c)=>s+(T[c].unconf||0),0),
       preEV: codes.reduce((s,c)=>s+preEvFor(c),0),
       proj:  codes.reduce((s,c)=>s+evFor(c),0)};
   }).sort((a,b)=>b.pts-a.pts || b.proj-a.proj);
@@ -730,7 +866,7 @@ function render(){
   const todays = ms.filter(m=>kickoff(m).toDateString()===now.toDateString());
   const done = ms.filter(m=>finalScore(m)).length;
   document.getElementById("topbar").innerHTML = `
-    <div class="stat you"><div class="label">${MGR[prefs.manager].short}'s points</div><div class="value">${fmtPts(totals[myIdx].pts)} <span style="font-size:.75rem;color:var(--muted)">(#${myIdx+1}) · proj ${totals[myIdx].proj.toFixed(1)}</span></div></div>
+    <div class="stat you"><div class="label">${MGR[prefs.manager].short}'s points</div><div class="value">${fmtPts(totals[myIdx].pts)}${uBadge(totals[myIdx].unconf)} <span style="font-size:.75rem;color:var(--muted)">(#${myIdx+1}) · proj ${totals[myIdx].proj.toFixed(1)}</span></div></div>
     <div class="stat"><div class="label">Leader</div><div class="value">${totals[0].mgr.short} · ${fmtPts(totals[0].pts)}</div></div>
     <div class="stat"><div class="label">Projected winner</div><div class="value">${projLeader.mgr.short} · ${projLeader.proj.toFixed(1)}</div></div>
     <div class="stat"><div class="label">Games today</div><div class="value">${todays.length}</div></div>
@@ -742,11 +878,11 @@ function render(){
     const delta=row.proj-row.preEV;
     const maxLine = `Max possible total ≤ <b>${fmtPts(row.ceiling)}</b> <span style="opacity:.75">(upper bound — one champion per roster, no bracket collisions yet)</span>`;
     return `<div class="mgr-row ${isYou?"you-row":""} ${open?"open":""}" data-mgr="${row.mgr.name}">
-      <div class="top"><span>#${i+1} <span style="color:${row.mgr.color}">${isYou?"⭐ ":""}${row.mgr.name}</span></span><span class="pts">${fmtPts(row.pts)} <span style="font-size:.7rem;color:var(--muted)">proj ${row.proj.toFixed(1)} <span style="color:${delta>=0?"var(--green)":"var(--red)"}">(${delta>=0?"+":""}${delta.toFixed(1)} vs draft)</span></span></span></div>
+      <div class="top"><span>#${i+1} <span style="color:${row.mgr.color}">${isYou?"⭐ ":""}${row.mgr.name}</span></span><span class="pts">${fmtPts(row.pts)}${uBadge(row.unconf)} <span style="font-size:.7rem;color:var(--muted)">proj ${row.proj.toFixed(1)} <span style="color:${delta>=0?"var(--green)":"var(--red)"}">(${delta>=0?"+":""}${delta.toFixed(1)} vs draft)</span></span></span></div>
       <div class="teams">${codes.map(c=>`${crest(c)} ${c} ${fmtPts(T[c].pts)}`).join(" · ")||"<i>rosters TBD — draft night pending</i>"}</div>
       <div class="detail"><div class="maxsum">${maxLine}</div><table>
         <tr><th>Team</th><th>Pos</th><th>Lg pts</th><th>W-D-L</th><th>Bye</th><th>KO pts</th><th>Banked</th><th>Proj</th></tr>
-        ${codes.map(c=>{const t=T[c];return `<tr><td>${crest(c)} ${BY_CODE[c].name}${t.champion?" 🏆":""}</td><td>${t.pos??"—"}</td><td>${fmtPts(t.realPts/2)}</td><td>${t.gW}-${t.gD}-${t.gL}</td><td>${t.top8?"+6":"—"}</td><td>${t.koWins.length?`<span title="Wins: ${t.koWins.map(km=>km.label).join(", ")}">+${t.koPts}</span>`:"—"}</td><td><b>${fmtPts(t.pts)}</b></td><td style="color:var(--muted)">${evFor(c).toFixed(1)}</td></tr>`;}).join("")}
+        ${codes.map(c=>{const t=T[c];const bye=t.top8?"+6":(t.clinch8&&!S.leagueDone?`<span class="unconf" title="Clinched a top-8 finish — +6 banks when the league phase completes">+6</span>`:"—");return `<tr><td>${crest(c)} ${BY_CODE[c].name}${t.champion?" 🏆":""}</td><td>${t.pos??"—"}</td><td>${fmtPts(t.realPts/2)}</td><td>${t.gW}-${t.gD}-${t.gL}</td><td>${bye}</td><td>${t.koWins.length?`<span title="Wins: ${t.koWins.map(km=>km.label).join(", ")}">+${t.koPts}</span>`:"—"}</td><td><b>${fmtPts(t.pts)}</b></td><td style="color:var(--muted)">${evFor(c).toFixed(1)}</td></tr>`;}).join("")}
       </table></div>
     </div>`;
   }).join("");
@@ -780,7 +916,11 @@ function render(){
     ${S.table.map((t,i)=>{
       const band = i===8||i===24 ? "band" : "";
       const cls = i<8 ? "bye" : i<24 ? "po" : "out";
-      return `<tr class="${cls} ${band}"><td>${i+1}</td><td>${crest(t.code)} ${BY_CODE[t.code].name} ${ownerChip(t.code)}</td><td>${t.gp}</td><td>${t.gW}</td><td>${t.gD}</td><td>${t.gL}</td><td>${t.gf-t.ga}</td><td><b>${t.realPts}</b></td></tr>`;
+      const mark = S.leagueDone ? "" :
+        t.clinch8 ? `<span class="lock" title="Clinched top-8 — the 6-pt knockout bye is guaranteed">🔒</span>` :
+        t.clinch24 ? `<span class="lock" style="color:var(--green)" title="Clinched a knockout berth (top 24)">✓</span>` :
+        t.out ? `<span class="lock" style="color:var(--red)" title="Mathematically out of the top 24">✕</span>` : "";
+      return `<tr class="${cls} ${band}"><td>${i+1}</td><td>${crest(t.code)} ${BY_CODE[t.code].name}${mark} ${ownerChip(t.code)}</td><td>${t.gp}</td><td>${t.gW}</td><td>${t.gD}</td><td>${t.gL}</td><td>${t.gf-t.ga}</td><td><b>${t.realPts}</b></td></tr>`;
     }).join("")}
   </table>`;
 
