@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WC 2026 Draft League — Live Tracker</title>
+<title>UCL 2026-27 Draft League — Live Tracker</title>
 <style>
   :root {
     --bg:#0f1419; --card:#1a2129; --card2:#212b36; --text:#e8edf2; --muted:#8b98a5;
     --accent:#2f81f7; --green:#56d364; --gold:#e3b341; --red:#f85149; --track:#28323d;
-    --line:#3a4654; --bk-cellw:168px; --bk-cw:24px; --bk-slot:80px;
+    --line:#3a4654;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:16px}
@@ -22,6 +22,7 @@
   .pill.loss{background:#3d2326;color:var(--red)}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
   .owner{display:inline-block;font-size:.62rem;padding:0 6px;border-radius:7px;font-weight:700;vertical-align:1px}
+  .crest{width:15px;height:15px;vertical-align:-2px;margin-right:2px;object-fit:contain}
   .hero{background:linear-gradient(110deg,#1c2a1f,var(--card));border:1px solid #2c4a33;border-radius:14px;padding:16px 18px;margin-bottom:14px}
   .hero .label{color:var(--gold);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
   .hero-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
@@ -49,7 +50,6 @@
   .mgr-row{background:var(--card2);border-radius:10px;padding:9px 12px;margin-bottom:7px;cursor:pointer}
   .mgr-row .top{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:.9rem}
   .mgr-row .top .pts{color:var(--green);font-size:1.05rem}
-  .unconf{color:var(--gold);border-bottom:1px dotted currentColor;cursor:help;font-weight:700}
   .mgr-row.you-row{outline:1px solid var(--gold)}
   .mgr-row .teams{color:var(--muted);font-size:.76rem;margin-top:4px;line-height:1.7}
   .mgr-row .detail{display:none;margin-top:8px;border-top:1px solid #2c3845;padding-top:6px}
@@ -74,21 +74,19 @@
   .match-row .when{min-width:84px;text-align:right;color:var(--muted);font-size:.72rem;line-height:1.3}
   .match-row.followed{background:linear-gradient(90deg,#26321f33,transparent);border-left:2px solid var(--gold);padding-left:8px}
   .datehead{color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 2px;font-weight:700}
-  .groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-  .gtable{background:var(--card2);border-radius:10px;padding:8px 10px}
-  .gtable .gname{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:4px}
-  .gtable table{width:100%;border-collapse:collapse;font-size:.74rem}
-  .gtable td,.gtable th{padding:2px 3px;text-align:right;font-variant-numeric:tabular-nums}
-  .gtable td:first-child,.gtable th:first-child{text-align:left}
-  .gtable th{color:var(--muted);font-size:.6rem;text-transform:uppercase}
-  .gtable tr.q td{color:var(--green)}
-  .gtable .lock{cursor:help;font-size:.7rem;margin-left:2px;vertical-align:middle}
-  .match-row .r32lock{font-size:.6rem;margin-left:3px;vertical-align:middle;cursor:help;opacity:.85}
+  .lgtable{background:var(--card2);border-radius:10px;padding:8px 10px}
+  .lgtable table{width:100%;border-collapse:collapse;font-size:.78rem}
+  .lgtable td,.lgtable th{padding:3px 4px;text-align:right;font-variant-numeric:tabular-nums}
+  .lgtable td:nth-child(-n+2),.lgtable th:nth-child(-n+2){text-align:left}
+  .lgtable th{color:var(--muted);font-size:.62rem;text-transform:uppercase;position:sticky;top:0;background:var(--card2)}
+  .lgtable tr.bye td{color:var(--green)}
+  .lgtable tr.po td{color:#8fb8f7}
+  .lgtable tr.out td{opacity:.55}
+  .lgtable tr.band td{border-top:2px solid #3b4754}
   select,option{background:var(--card2);color:var(--text);border:1px solid var(--track);border-radius:8px;padding:5px 8px;font-size:.8rem}
   .chip{display:inline-flex;align-items:center;gap:4px;background:var(--card2);border-radius:8px;padding:2px 8px;font-size:.75rem;margin:2px 4px 2px 0}
   .chip button{background:none;border:none;color:var(--red);cursor:pointer;font-size:.8rem;padding:0}
   .small{font-size:.72rem;color:var(--muted);line-height:1.6;margin-top:8px}
-  .settings-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;font-size:.8rem}
   a{color:var(--accent)}
   .tabs{display:flex;gap:6px;margin-bottom:8px}
   .tab{background:var(--track);border:none;color:var(--muted);border-radius:8px;padding:5px 12px;font-size:.76rem;cursor:pointer;font-weight:600}
@@ -110,61 +108,11 @@
     #standings{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
     #standings .mgr-row{margin-bottom:0}
   }
-
-  /* ===== knockout bracket ===== */
-  .bk-scroll{overflow-x:auto;padding:4px 2px 10px;scrollbar-color:var(--track) transparent}
-  /* ESPN-style: both halves of the draw STACKED vertically, flowing left→right into a
-     centered Final. That is exactly the whole tree rooted at the final, so it renders as
-     one left-aligned left→right tree — reusing the single-direction connector set below. */
-  .bk-heads{display:flex;width:max-content;padding:0 4px 8px}
-  .bk-heads span{width:var(--bk-cellw);margin-right:var(--bk-cw);text-align:center;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gold)}
-  .bk-heads span:last-child{margin-right:0}
-  .bk-grid{display:flex;align-items:center;width:max-content;padding:2px 4px}
-  .bk-node{display:flex;align-items:center}
-  .bk-feeders{display:flex;flex-direction:column;position:relative}
-  .bk-leaf{min-height:var(--bk-slot);justify-content:center}
-  .bk-cw{position:relative;display:flex;align-items:center}
-  .bk-branch>.bk-cw{margin-left:var(--bk-cw)}
-  /* connectors: every cell links rightward to its parent's junction; each branch draws
-     the vertical junction feeding it (the root final's is the big top↔bottom-half join) */
-  .bk-node>.bk-cw::after{content:"";position:absolute;left:100%;width:calc(var(--bk-cw)/2);top:50%;border-top:2px solid var(--line)}
-  .bk-branch>.bk-feeders::after{content:"";position:absolute;left:100%;margin-left:calc(var(--bk-cw)/2);width:0;top:25%;height:50%;border-left:2px solid var(--line)}
-  .bk-branch>.bk-cw::before{content:"";position:absolute;right:100%;width:calc(var(--bk-cw)/2);top:50%;border-top:2px solid var(--line)}
-  /* the final is the tree root: no stub past it — the champion sits to its right instead */
-  .bk-root>.bk-cw::after{content:none}
-  /* match cell */
-  .bk-cell{width:var(--bk-cellw);background:var(--card2);border:1px solid #2a3542;border-radius:8px;padding:5px 7px;position:relative}
-  .bk-cell.bk-live{border-color:#5a2c33;background:linear-gradient(110deg,#2a1c1f,var(--card2))}
-  .bk-cell.bk-hasfoll{border-color:#5a4a22;box-shadow:0 0 0 1px #e3b34122}
-  .bk-team{display:flex;align-items:center;gap:5px;height:21px;font-size:.74rem}
-  .bk-fl{font-size:.92rem;flex:none}
-  .bk-nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
-  .bk-nm.bk-tbd{color:var(--muted);font-weight:500;font-size:.7rem}
-  .bk-vs{opacity:.5;margin:0 1px}
-  .bk-sc{min-width:22px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums;flex:none}
-  .bk-sc sup{font-size:.58rem;color:var(--muted);font-weight:700;margin-left:1px}
-  .bk-team.bk-win .bk-nm{color:#fff}
-  .bk-team.bk-win .bk-sc{color:var(--green)}
-  .bk-team.bk-lose{opacity:.4}
-  .bk-team .owner{vertical-align:0}
-  .bk-foot{margin-top:3px;font-size:.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;display:flex;justify-content:space-between;align-items:baseline;gap:6px}
-  .bk-foot .bk-rnd{flex:none}
-  .bk-foot .bk-when{flex:1;min-width:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:none;letter-spacing:0}
-  .bk-foot .bk-liveT{color:var(--red);font-weight:700}
-  .bk-sofa{color:var(--muted);text-decoration:none}
-  .bk-sofa:hover{color:var(--gold)}
-  .bk-finalwrap .bk-cell{border-color:#caa53e;background:linear-gradient(120deg,#241f12,var(--card2))}
-  .bk-rl{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);font-weight:700;margin-bottom:5px;text-align:center}
-  .bk-rl.bk-rl-muted{color:var(--muted)}
-  .bk-champ{margin-left:var(--bk-cw);flex:none;width:118px;text-align:center;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-  .bk-champ b{color:var(--gold);display:block;font-size:.8rem;margin-top:3px;text-transform:none;letter-spacing:0;line-height:1.2}
-  .bk-third{display:flex;flex-direction:column;align-items:flex-start;margin:18px 0 0;gap:5px;padding-left:4px}
-  .bk-third .bk-cw{display:inline-flex}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>⚽ 2026 World Cup Draft League <span class="pill">live results</span> <span class="updated" id="updated"></span> <button class="btn" id="refreshBtn" style="margin-left:auto"><span class="ref-ico">↻</span> Refresh</button></h1>
+  <h1>⚽ UCL 2026-27 Draft League <span class="pill">live results</span> <span class="updated" id="updated"></span> <button class="btn" id="refreshBtn" style="margin-left:auto"><span class="ref-ico">↻</span> Refresh</button></h1>
 
   <div class="nowbar" id="nowbar"></div>
 
@@ -185,15 +133,7 @@
   <div class="panel">
     <h2>League standings <span class="small" style="margin:0">click a manager for breakdown</span></h2>
     <div id="standings"></div>
-    <p class="small">Scoring: group win 3 · draw 1 · advance to KO +4 · each KO win +5 · winning the final +10 (5 win + 5 champion bonus). Third-place match is not scored.
-    A gold <span class="unconf">+N</span> = <b>unconfirmed</b> points: a knockout berth a team has mathematically clinched (the +4, via FIFA 2026 head-to-head-first tie-breakers) but that isn't banked yet because the bracket isn't seeded — it converts to banked points once the group stage resolves. Best-third-place clinches aren't pre-counted, and standings rank by banked points only.
-    "Proj" = expected final total from Silver Bulletin's odds, which he republishes nightly after each matchday (banked points are included in his updated numbers). "vs draft" compares that to the pre-tournament expectation — whose draft is aging well. If the odds feed is unreachable the page falls back to the last fetched copy, then to pre-tournament numbers (see the header note for which is in use).</p>
-  </div>
-
-  <div class="panel">
-    <h2><span>Knockout bracket</span> <span class="small" style="margin:0;font-weight:400;text-transform:none;letter-spacing:0">winner in bold · ↗ opens Sofascore · both halves flow left → right into the final</span></h2>
-    <div class="bk-scroll"><div id="bracket"></div></div>
-    <p class="small">Pending slots show their two possible teams (e.g. 🇫🇷 France / 🇸🇪 Sweden) until the feeding game finishes, then resolve automatically. Owner chips show who drafted each team. The third-place play-off is shown for completeness but isn't scored.</p>
+    <p class="small" id="scoringNote"></p>
   </div>
 
   <div class="cols">
@@ -211,9 +151,9 @@
       <div class="panel">
         <h2>About</h2>
         <p class="small">
-          Scores come from ESPN's public scoreboard within minutes of full time (including live in-game scores), overlaid on the canonical schedule/bracket from the <a href="https://github.com/upbound-web/worldcup-live.json">community mirror</a> / <a href="https://github.com/openfootball/worldcup.json">openfootball feed</a> (whichever has more completed results — the header shows which). No manual entry needed. Live scores poll every 30 seconds, everything else every 10 minutes.<br>
+          Scores come from ESPN's public scoreboard within minutes of full time (including live in-game scores), overlaid on the bundled schedule snapshot (<code>data/fixtures.json</code>, refreshed by a nightly GitHub Action). Live scores poll every 30 seconds, everything else every 10 minutes.<br>
           A live or finished score with a small ↗ links to that match on <a href="https://www.sofascore.com">Sofascore</a> (opens in a new tab) for full live + post-match stats — xG, shots, momentum.<br>
-          Draft happened 2026-06-10. The pre-tournament <a href="draft.html">draft board &amp; simulator</a> is preserved here.
+          "Proj" totals recombine the <a href="https://theanalyst.com/competition/uefa-champions-league">Opta supercomputer's</a> nightly-updated probabilities under this league's scoring (no team re-modeling). The pre-tournament <a href="draft.html">draft board &amp; simulator</a> lives here.
         </p>
       </div>
     </div>
@@ -223,9 +163,9 @@
         <div id="watchlist"></div>
       </div>
       <div class="panel">
-        <h2>Group tables</h2>
-        <div class="groups-grid" id="groups"></div>
-        <p class="small">Top 2 in each group advance, plus the 8 best third-place teams. Green = currently in qualifying position (top 2 only; third-place qualification shown once FIFA confirms).</p>
+        <h2>League phase table</h2>
+        <div class="lgtable" id="lgtable"></div>
+        <p class="small">Top 8 (green) go straight to the Round of 16 and bank the 6-pt bye. 9–24 (blue) enter the February knockout play-offs. 25–36 are out. Ranked by points → goal difference → goals scored (UEFA order — no head-to-head).</p>
       </div>
     </div>
   </div>
@@ -233,332 +173,251 @@
 
 <script>
 // ============================================================================
-// Flag-emoji polyfill — Windows has no flag glyphs (renders letter pairs).
-// Detect by drawing a flag to canvas: real flag emoji produce colored pixels,
-// the letters fallback is monochrome. Only then load the Twemoji Country
-// Flags webfont (78 KB, covers ONLY flag codepoints via unicode-range), so
-// Mac/iOS/Android rendering is untouched and pays no download.
+// League scoring (rules PDF). League fantasy points = half of real table
+// points (win 1.5 / draw 0.5) — computed as realPts/2 so halves are exact.
+// PLAYOFF_WIN_PTS: does winning the February knockout play-off tie pay like a
+// knockout win? Commissioner TBD — default 5, set to 0 if ruled out.
+// Keep in sync with draft.html.
 // ============================================================================
-(function(){
-  try{
-    const cv=document.createElement("canvas"); cv.width=cv.height=20;
-    const ctx=cv.getContext("2d");
-    ctx.textBaseline="top"; ctx.font="16px sans-serif";
-    ctx.fillText("🇨🇭",0,0);
-    const d=ctx.getImageData(0,0,20,20).data;
-    for(let i=0;i<d.length;i+=4) if(d[i]!==d[i+1]||d[i+1]!==d[i+2]) return; // colored → flags work
-    const st=document.createElement("style");
-    st.textContent=`@font-face{font-family:"Twemoji Country Flags";src:url("assets/TwemojiCountryFlags.woff2") format("woff2");unicode-range:U+1F1E6-1F1FF,U+1F3F4,U+E0061-E007A,U+E007F;font-display:swap;}`;
-    document.head.appendChild(st);
-    document.body.style.fontFamily='"Twemoji Country Flags", '+getComputedStyle(document.body).fontFamily;
-  }catch(e){}
-})();
+const PLAYOFF_WIN_PTS = 5;
+const BYE_PTS = 6, KO_WIN_PTS = 5, CHAMP_BONUS = 5;
 
 // ============================================================================
 // League config
 // ============================================================================
 const MANAGERS = [
-  {name:"Steve Patti",   short:"Steve",   color:"#5ab0f7"},
+  {name:"Michael Biedenstein", short:"Michael", color:"#f76a8c"},
+  {name:"Mike Weiss",    short:"Mike",    color:"#9d8cff"},
   {name:"Zane Truman",   short:"Zane",    color:"#f78c5a"},
   {name:"Dustin Fox",    short:"Dustin",  color:"#e3b341"},
-  {name:"Mike Weiss",    short:"Mike",    color:"#9d8cff"},
-  {name:"Chris Renz",    short:"Chris",   color:"#56d364"},
-  {name:"Michael Biedenstein", short:"Michael", color:"#f76a8c"},
-  {name:"Ben Snyders",   short:"Ben",     color:"#4dd0c4"},
   {name:"Jordan Butcher",short:"Jordan",  color:"#c0ca5e"},
+  {name:"Steve Patti",   short:"Steve",   color:"#5ab0f7"},
 ];
 const YOU_DEFAULT = "Dustin Fox";
 
-// Draft results pulled from the league Google Sheet (2026-06-12)
+// TODO draft night: fill from the league Google Sheet (6 codes per manager).
 const ROSTERS = {
-  "Dustin Fox":          ["ARG","MEX","NOR","PAR","BIH","RSA"],
-  "Ben Snyders":         ["GER","NED","KOR","CIV","TUN","UZB"],
-  "Steve Patti":         ["ESP","USA","ECU","CZE","SCO","CUW"],
-  "Michael Biedenstein": ["BRA","COL","CAN","EGY","AUS","HAI"],
-  "Jordan Butcher":      ["SUI","MAR","IRN","QAT","IRQ","JOR"],
-  "Chris Renz":          ["ENG","BEL","TUR","SWE","NZL","GHA"],
-  "Zane Truman":         ["FRA","JPN","SEN","ALG","CPV","PAN"],
-  "Mike Weiss":          ["POR","URU","CRO","AUT","COD","KSA"],
+  "Michael Biedenstein": [],
+  "Mike Weiss":          [],
+  "Zane Truman":         [],
+  "Dustin Fox":          [],
+  "Jordan Butcher":      [],
+  "Steve Patti":         [],
 };
 
-// Team master list (codes/groups/flags + Silver Bulletin pre-tournament inputs,
-// same numbers as the draft board — used only for the "Pre EV" reference column)
+// Club master list — keep in sync with data/teams.json and draft.html.
+// coef = UEFA coefficient rank in this field; espnId feeds the crest URL.
 const TEAMS = [
-{code:"ARG",name:"Argentina",flag:"🇦🇷",group:"J",W:2.3,D:0.5,r32:0.989945,kow:2.291280,champ:0.18612},
-{code:"ESP",name:"Spain",flag:"🇪🇸",group:"H",W:2.3,D:0.5,r32:0.99252,kow:2.230330,champ:0.173715},
-{code:"ENG",name:"England",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",group:"L",W:2.2,D:0.6,r32:0.981655,kow:1.841920,champ:0.09983},
-{code:"FRA",name:"France",flag:"🇫🇷",group:"I",W:1.9,D:0.7,r32:0.956685,kow:1.925555,champ:0.114175},
-{code:"BRA",name:"Brazil",flag:"🇧🇷",group:"C",W:2.0,D:0.7,r32:0.969515,kow:1.606655,champ:0.066115},
-{code:"GER",name:"Germany",flag:"🇩🇪",group:"E",W:2.1,D:0.5,r32:0.978835,kow:1.539070,champ:0.066765},
-{code:"POR",name:"Portugal",flag:"🇵🇹",group:"K",W:1.8,D:0.7,r32:0.948965,kow:1.422465,champ:0.048395},
-{code:"MEX",name:"Mexico",flag:"🇲🇽",group:"A",W:2.0,D:0.7,r32:0.97181,kow:1.293300,champ:0.01046},
-{code:"COL",name:"Colombia",flag:"🇨🇴",group:"K",W:1.8,D:0.7,r32:0.940145,kow:1.314555,champ:0.04112},
-{code:"BEL",name:"Belgium",flag:"🇧🇪",group:"G",W:2.0,D:0.6,r32:0.9628,kow:1.131140,champ:0.014305},
-{code:"NED",name:"Netherlands",flag:"🇳🇱",group:"F",W:1.8,D:0.7,r32:0.932345,kow:1.078240,champ:0.024245},
-{code:"NOR",name:"Norway",flag:"🇳🇴",group:"I",W:1.5,D:0.7,r32:0.90362,kow:1.259765,champ:0.041625},
-{code:"SUI",name:"Switzerland",flag:"🇨🇭",group:"B",W:1.8,D:0.6,r32:0.956065,kow:1.072300,champ:0.01093},
-{code:"CAN",name:"Canada",flag:"🇨🇦",group:"B",W:1.8,D:0.7,r32:0.94841,kow:0.939590,champ:0.004985},
-{code:"TUR",name:"Turkey",flag:"🇹🇷",group:"D",W:1.5,D:0.8,r32:0.85677,kow:1.105055,champ:0.01957},
-{code:"ECU",name:"Ecuador",flag:"🇪🇨",group:"E",W:1.6,D:0.7,r32:0.927045,kow:0.881880,champ:0.01809},
-{code:"URU",name:"Uruguay",flag:"🇺🇾",group:"H",W:1.6,D:0.7,r32:0.92972,kow:0.717130,champ:0.013635},
-{code:"USA",name:"United States",flag:"🇺🇸",group:"D",W:1.3,D:0.9,r32:0.79525,kow:0.867870,champ:0.01115},
-{code:"CRO",name:"Croatia",flag:"🇭🇷",group:"L",W:1.4,D:0.7,r32:0.866565,kow:0.628400,champ:0.00683},
-{code:"JPN",name:"Japan",flag:"🇯🇵",group:"F",W:1.4,D:0.8,r32:0.84426,kow:0.587950,champ:0.00617},
-{code:"MAR",name:"Morocco",flag:"🇲🇦",group:"C",W:1.2,D:0.9,r32:0.790615,kow:0.503380,champ:0.003815},
-{code:"SEN",name:"Senegal",flag:"🇸🇳",group:"I",W:1.1,D:0.8,r32:0.748385,kow:0.580960,champ:0.00663},
-{code:"PAR",name:"Paraguay",flag:"🇵🇾",group:"D",W:1.0,D:0.9,r32:0.681395,kow:0.560300,champ:0.004005},
-{code:"AUT",name:"Austria",flag:"🇦🇹",group:"J",W:1.2,D:0.7,r32:0.763115,kow:0.304565,champ:0.001905},
-{code:"EGY",name:"Egypt",flag:"🇪🇬",group:"G",W:1.1,D:0.8,r32:0.747265,kow:0.298335,champ:0.00039},
-{code:"SCO",name:"Scotland",flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿",group:"C",W:1.0,D:0.8,r32:0.719105,kow:0.341620,champ:0.00139},
-{code:"CZE",name:"Czechia",flag:"🇨🇿",group:"A",W:1.0,D:0.8,r32:0.6689,kow:0.361575,champ:0.000525},
-{code:"KOR",name:"South Korea",flag:"🇰🇷",group:"A",W:0.9,D:0.9,r32:0.66218,kow:0.346105,champ:0.00045},
-{code:"BIH",name:"Bosnia & Herz.",flag:"🇧🇦",group:"B",W:0.9,D:0.7,r32:0.67953,kow:0.223470,champ:0.0001},
-{code:"IRN",name:"Iran",flag:"🇮🇷",group:"G",W:0.9,D:0.8,r32:0.656715,kow:0.208635,champ:0.000135},
-{code:"CIV",name:"Ivory Coast",flag:"🇨🇮",group:"E",W:0.9,D:0.7,r32:0.66861,kow:0.210805,champ:0.000395},
-{code:"SWE",name:"Sweden",flag:"🇸🇪",group:"F",W:0.9,D:0.8,r32:0.636595,kow:0.210460,champ:0.000565},
-{code:"ALG",name:"Algeria",flag:"🇩🇿",group:"J",W:0.9,D:0.7,r32:0.637975,kow:0.198265,champ:0.00065},
-{code:"PAN",name:"Panama",flag:"🇵🇦",group:"L",W:0.7,D:0.7,r32:0.541905,kow:0.156330,champ:0.00025},
-{code:"AUS",name:"Australia",flag:"🇦🇺",group:"D",W:0.5,D:0.8,r32:0.393645,kow:0.187725,champ:0.000275},
-{code:"COD",name:"DR Congo",flag:"🇨🇩",group:"K",W:0.6,D:0.7,r32:0.407575,kow:0.102160,champ:0.000125},
-{code:"RSA",name:"South Africa",flag:"🇿🇦",group:"A",W:0.5,D:0.8,r32:0.35782,kow:0.106210,champ:0.00003},
-{code:"UZB",name:"Uzbekistan",flag:"🇺🇿",group:"K",W:0.5,D:0.7,r32:0.33734,kow:0.073175,champ:0.00006},
-{code:"NZL",name:"New Zealand",flag:"🇳🇿",group:"G",W:0.4,D:0.7,r32:0.305835,kow:0.043120,champ:0},
-{code:"TUN",name:"Tunisia",flag:"🇹🇳",group:"F",W:0.4,D:0.7,r32:0.28183,kow:0.041710,champ:0.00004},
-{code:"KSA",name:"Saudi Arabia",flag:"🇸🇦",group:"H",W:0.4,D:0.6,r32:0.30351,kow:0.034865,champ:0.000005},
-{code:"CPV",name:"Cape Verde",flag:"🇨🇻",group:"H",W:0.4,D:0.6,r32:0.293405,kow:0.033710,champ:0.00001},
-{code:"GHA",name:"Ghana",flag:"🇬🇭",group:"L",W:0.3,D:0.6,r32:0.24001,kow:0.033865,champ:0.000005},
-{code:"JOR",name:"Jordan",flag:"🇯🇴",group:"J",W:0.3,D:0.6,r32:0.23473,kow:0.031955,champ:0.000005},
-{code:"HAI",name:"Haiti",flag:"🇭🇹",group:"C",W:0.3,D:0.6,r32:0.220505,kow:0.031205,champ:0.000005},
-{code:"IRQ",name:"Iraq",flag:"🇮🇶",group:"I",W:0.2,D:0.5,r32:0.123015,kow:0.021845,champ:0.000005},
-{code:"QAT",name:"Qatar",flag:"🇶🇦",group:"B",W:0.2,D:0.5,r32:0.13044,kow:0.011960,champ:0},
-{code:"CUW",name:"Curaçao",flag:"🇨🇼",group:"E",W:0.2,D:0.5,r32:0.115125,kow:0.009125,champ:0},
+{code:"BAY",name:"Bayern München",short:"Bayern",espnId:"132",coef:1},
+{code:"RMA",name:"Real Madrid",short:"Real Madrid",espnId:"86",coef:2},
+{code:"PSG",name:"Paris Saint-Germain",short:"PSG",espnId:"160",coef:3},
+{code:"LIV",name:"Liverpool",short:"Liverpool",espnId:"364",coef:4},
+{code:"INT",name:"Inter Milan",short:"Inter",espnId:"110",coef:5},
+{code:"MCI",name:"Manchester City",short:"Man City",espnId:"382",coef:6},
+{code:"ARS",name:"Arsenal",short:"Arsenal",espnId:"359",coef:7},
+{code:"BAR",name:"Barcelona",short:"Barcelona",espnId:"83",coef:8},
+{code:"ATM",name:"Atlético Madrid",short:"Atlético",espnId:"1068",coef:9},
+{code:"BVB",name:"Borussia Dortmund",short:"Dortmund",espnId:"124",coef:10},
+{code:"ROM",name:"AS Roma",short:"Roma",espnId:"104",coef:11},
+{code:"SCP",name:"Sporting CP",short:"Sporting",espnId:"2250",coef:12},
+{code:"AVL",name:"Aston Villa",short:"Villa",espnId:"362",coef:13},
+{code:"POR",name:"FC Porto",short:"Porto",espnId:"437",coef:14},
+{code:"MUN",name:"Manchester United",short:"Man Utd",espnId:"360",coef:15},
+{code:"BRU",name:"Club Brugge",short:"Club Brugge",espnId:"570",coef:16},
+{code:"BET",name:"Real Betis",short:"Betis",espnId:"244",coef:17},
+{code:"PSV",name:"PSV Eindhoven",short:"PSV",espnId:"148",coef:18},
+{code:"FEY",name:"Feyenoord",short:"Feyenoord",espnId:"142",coef:19},
+{code:"LIL",name:"Lille OSC",short:"Lille",espnId:"166",coef:20},
+{code:"BOD",name:"Bodø/Glimt",short:"Bodø/Glimt",espnId:"2980",coef:21},
+{code:"NAP",name:"Napoli",short:"Napoli",espnId:"114",coef:22},
+{code:"RBL",name:"RB Leipzig",short:"Leipzig",espnId:"11420",coef:23},
+{code:"VIL",name:"Villarreal",short:"Villarreal",espnId:"102",coef:24},
+{code:"FEN",name:"Fenerbahçe",short:"Fenerbahçe",espnId:"436",coef:25},
+{code:"SHK",name:"Shakhtar Donetsk",short:"Shakhtar",espnId:"493",coef:26},
+{code:"GAL",name:"Galatasaray",short:"Galatasaray",espnId:"432",coef:27},
+{code:"SLA",name:"Slavia Praha",short:"Slavia",espnId:"494",coef:28},
+{code:"SLO",name:"Slovan Bratislava",short:"Slovan",espnId:"521",coef:29},
+{code:"VFB",name:"VfB Stuttgart",short:"Stuttgart",espnId:"134",coef:30},
+{code:"AEK",name:"AEK Athens",short:"AEK",espnId:"887",coef:31},
+{code:"LSK",name:"LASK",short:"LASK",espnId:"4411",coef:32},
+{code:"COM",name:"Como 1907",short:"Como",espnId:"2572",coef:33},
+{code:"LEN",name:"RC Lens",short:"Lens",espnId:"175",coef:34},
+{code:"VIK",name:"Viking FK",short:"Viking",espnId:"510",coef:35},
+{code:"SAB",name:"Sabah FK",short:"Sabah",espnId:"21922",coef:36},
 ];
-TEAMS.forEach(t=>{ t.preEV = 3*t.W + t.D + 4*t.r32 + 5*t.kow + 5*t.champ; });
 const BY_CODE = Object.fromEntries(TEAMS.map(t=>[t.code,t]));
 const OWNER = {}; for(const [m,codes] of Object.entries(ROSTERS)) codes.forEach(c=>OWNER[c]=m);
 const MGR = Object.fromEntries(MANAGERS.map(m=>[m.name,m]));
+const crest = code => `<img class="crest" src="https://a.espncdn.com/i/teamlogos/soccer/500/${BY_CODE[code].espnId}.png" alt="" loading="lazy">`;
 
-// openfootball team-name → code (names that differ from our master list)
-const NAME_TO_CODE = Object.fromEntries(TEAMS.map(t=>[t.name,t.code]));
-Object.assign(NAME_TO_CODE, {
-  "Czech Republic":"CZE","Czechia":"CZE",
-  "Bosnia & Herzegovina":"BIH","Bosnia and Herzegovina":"BIH","Bosnia-Herzegovina":"BIH",
-  "USA":"USA","United States":"USA",
-  "Türkiye":"TUR","Turkey":"TUR",
-  "Côte d'Ivoire":"CIV","Ivory Coast":"CIV",
-  "Korea Republic":"KOR","South Korea":"KOR",
-  "Congo DR":"COD","DR Congo":"COD",
-});
+// ESPN displayName → code (join key for the live scoreboard overlay; ESPN
+// abbreviations are traps — their "MUN" is Bayern Munich).
+const ESPN_TO_CODE = {
+  "AEK Athens":"AEK","AS Roma":"ROM","Arsenal":"ARS","Aston Villa":"AVL",
+  "Atlético Madrid":"ATM","Barcelona":"BAR","Bayern Munich":"BAY","Bodo/Glimt":"BOD",
+  "Borussia Dortmund":"BVB","Club Brugge":"BRU","Como":"COM","FC Porto":"POR",
+  "Fenerbahce":"FEN","Feyenoord Rotterdam":"FEY","Galatasaray":"GAL","Internazionale":"INT",
+  "LASK Linz":"LSK","Lens":"LEN","Lille":"LIL","Liverpool":"LIV","Manchester City":"MCI",
+  "Manchester United":"MUN","Napoli":"NAP","PSV Eindhoven":"PSV","Paris Saint-Germain":"PSG",
+  "RB Leipzig":"RBL","Real Betis":"BET","Real Madrid":"RMA","Sabah FK":"SAB",
+  "Shakhtar Donetsk":"SHK","Slavia Prague":"SLA","Slovan Bratislava":"SLO","Sporting CP":"SCP",
+  "VfB Stuttgart":"VFB","Viking FK":"VIK","Villarreal":"VIL",
+};
 
 // ============================================================================
-// Silver Bulletin live odds
-// His article is paywalled, but the Datawrapper charts under it serve their
-// data from a public CDN and he republishes them nightly after each matchday.
-// Group charts give updated expected W/D (banked + remaining); the KO chart
-// gives updated round-reach probabilities — exactly the inputs of the draft
-// EV formula, so "live EV" is the same arithmetic on fresher numbers.
-// Fallback chain: live fetch → last good fetch (localStorage) → pre-tournament.
+// Rounds. ESPN's season.slug names each phase; normalize defensively since
+// the knockout slugs won't be observable until the ties are drawn (February).
+// meta.pts = fantasy points for winning the TIE (Final = 10: 5 win + 5 bonus).
 // ============================================================================
-const DW_GROUP_CHARTS = ["1oPAd","EodNy","ArtIj"]; // groups A–D, E–H, I–L
-const DW_KO_CHART = "JRO90";
-let SILVER = {src:"pre", asOf:null, teams:null};
-let silverChecked = false; // first fetch attempt finished (suppresses a false stale-flash on load)
-
-function parseCSV(text){
-  const rows=[]; let row=[], field="", inQ=false;
-  for(let i=0;i<text.length;i++){
-    const ch=text[i];
-    if(inQ){ if(ch==='"'){ if(text[i+1]==='"'){field+='"';i++;} else inQ=false; } else field+=ch; }
-    else if(ch==='"') inQ=true;
-    else if(ch===","){ row.push(field); field=""; }
-    else if(ch==="\n"){ row.push(field); rows.push(row); row=[]; field=""; }
-    else if(ch!=="\r") field+=ch;
-  }
-  if(field!==""||row.length){ row.push(field); rows.push(row); }
-  return rows.filter(r=>r.length>1);
+const LEAGUE_ROUND = "league-phase";
+const KO_META_LIST = [
+  {key:"po",  label:"Knockout play-offs", short:"PO",  pts:PLAYOFF_WIN_PTS,        ord:1, legs:2, match:s=>/playoff|play-off/.test(s)},
+  {key:"r16", label:"Round of 16",        short:"R16", pts:KO_WIN_PTS,             ord:2, legs:2, match:s=>/16/.test(s)},
+  {key:"qf",  label:"Quarterfinals",      short:"QF",  pts:KO_WIN_PTS,             ord:3, legs:2, match:s=>/quarter/.test(s)},
+  {key:"sf",  label:"Semifinals",         short:"SF",  pts:KO_WIN_PTS,             ord:4, legs:2, match:s=>/semi/.test(s)},
+  {key:"fin", label:"Final",              short:"Final",pts:KO_WIN_PTS+CHAMP_BONUS,ord:5, legs:1, match:s=>/final/.test(s)},
+];
+const isLeague = m => m.round === LEAGUE_ROUND;
+const _koCache = {};
+function koMeta(round){ // null for league phase / unknown rounds
+  if(round===LEAGUE_ROUND) return null;
+  if(round in _koCache) return _koCache[round];
+  const s=(round||"").toLowerCase();
+  // order matters: "quarterfinals"/"semifinals" contain "final"
+  const meta = KO_META_LIST.find(k=>k.key!=="fin"&&k.match(s)) || (KO_META_LIST[4].match(s)?KO_META_LIST[4]:null);
+  return _koCache[round]=meta;
 }
+const roundLabel = m => isLeague(m) ? `MD ${m.md||"?"}` : (koMeta(m.round)?.label || m.round);
 
-async function dwFetch(id){
-  // /<id>/dataset.csv doesn't exist and /<id>/ redirects via meta-refresh,
-  // so resolve the published version through embed.json first.
-  const meta = await (await fetch(`https://datawrapper.dwcdn.net/${id}/embed.json?t=${Math.floor(Date.now()/600000)}`, {cache:"no-store"})).json();
-  const v = meta.chart.publicVersion;
-  const csv = await (await fetch(`https://datawrapper.dwcdn.net/${id}/${v}/dataset.csv`)).text();
-  return {rows:parseCSV(csv), modified:meta.chart.lastModifiedAt};
-}
+// ============================================================================
+// Opta supercomputer odds (via theanalyst.com), harvested server-side by
+// scripts/harvest-opta.py into data/opta.json (the feed is Referer-gated, so
+// the browser can't fetch it directly) and refreshed by the nightly Action.
+// "Proj" = the draft board's EV formula on the freshest numbers — banked
+// results are already reflected because Opta resolves probabilities to 0/1.
+// Fallback chain: repo file → last good copy (localStorage) → pre-draft file.
+// ============================================================================
+let OPTA = {src:"none", asOf:null, teams:null};
+let PRE = null;          // frozen data/pre-draft.json (draft-day expectations)
+let optaChecked = false; // first fetch finished (suppresses a false stale-flash)
 
-async function loadSilver(){
+const evFromOpta = o => o.avgPts/2 + BYE_PTS*o.top8 + PLAYOFF_WIN_PTS*Math.max(0,o.r16-o.top8)
+  + KO_WIN_PTS*(o.qf+o.sf+o.fin+o.champ) + CHAMP_BONUS*o.champ;
+
+async function loadOpta(){
   try{
-    const [g1,g2,g3,ko] = await Promise.all([...DW_GROUP_CHARTS, DW_KO_CHART].map(dwFetch));
-    const teams = {};
-    for(const part of [g1,g2,g3]){
-      const head=part.rows[0], iC=head.indexOf("fifa_code"), iW=head.indexOf("W"), iD=head.indexOf("D");
-      for(const r of part.rows.slice(1)){
-        const c=r[iC];
-        if(BY_CODE[c]) teams[c]={gExp: 3*+r[iW] + +r[iD]};
-      }
-    }
-    const head=ko.rows[0];
-    const [iC,i32,i16,i8,iS,iF,iCh] = ["fifa_code","_r32","_r16","_r8","_semi","_final","_champ"].map(k=>head.indexOf(k));
-    for(const r of ko.rows.slice(1)){
-      const c=r[iC], t=teams[c];
-      if(!t) continue;
-      const p=i=>+r[i]/100; // chart values are percentages
-      t.r32=p(i32); t.kow=p(i16)+p(i8)+p(iS)+p(iF)+p(iCh); t.champ=p(iCh);
-      t.ev = t.gExp + 4*t.r32 + 5*t.kow + 5*t.champ;
-    }
-    const complete = Object.fromEntries(Object.entries(teams).filter(([,t])=>t.ev!=null && isFinite(t.ev)));
-    if(Object.keys(complete).length < 40) throw new Error("incomplete Silver data: "+Object.keys(complete).length);
-    SILVER = {src:"live", asOf:ko.modified, teams:complete};
-    try{ localStorage.setItem("wcSilverCache", JSON.stringify(SILVER)); }catch(e){}
+    const r = await fetch("data/opta.json?t=" + Math.floor(Date.now()/600000), {cache:"no-store"});
+    if(!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    if(!d.teams || Object.keys(d.teams).length < 30) throw new Error("incomplete");
+    OPTA = {src:"live", asOf:d.asOf, teams:d.teams};
+    try{ localStorage.setItem("uclOptaCache", JSON.stringify(OPTA)); }catch(e){}
   }catch(e){
     try{
-      const c = JSON.parse(localStorage.getItem("wcSilverCache")||"null");
-      if(c && c.teams) SILVER = {...c, src:"cache"};
+      const c = JSON.parse(localStorage.getItem("uclOptaCache")||"null");
+      if(c && c.teams) OPTA = {...c, src:"cache"};
     }catch(e2){}
   }
-  silverChecked = true;
+  if(!PRE){
+    try{
+      const r = await fetch("data/pre-draft.json");
+      if(r.ok){ const d = await r.json(); if(d.teams) PRE = d.teams; }
+    }catch(e){}
+  }
+  optaChecked = true;
   render();
 }
-
-// Live expected final total for a team; pre-tournament EV when no fresh data
-const evFor = code => (SILVER.teams && SILVER.teams[code]) ? SILVER.teams[code].ev : BY_CODE[code].preEV;
+const evFor  = code => (OPTA.teams && OPTA.teams[code]) ? evFromOpta(OPTA.teams[code]) : (PRE && PRE[code] ? evFromOpta(PRE[code]) : 0);
+const preEvFor = code => (PRE && PRE[code]) ? evFromOpta(PRE[code]) : evFor(code);
 
 // ============================================================================
-// Data load
+// Data load — bundled ESPN snapshot (data/fixtures.json, committed by the
+// nightly Action) boots the page; the live ESPN scoreboard overlay then
+// upserts by event id, so new knockout fixtures appear without a deploy.
 // ============================================================================
-// Two live feeds, same schema: a community mirror with an ESPN poller
-// (results within minutes) and the canonical hand-updated openfootball repo
-// (once a day). Both are fetched; the one with more completed results wins
-// (mirror on ties), so a stalled mirror degrades gracefully instead of
-// pinning the page to stale data. Bundled snapshot is the last resort.
-const FEEDS = [
-  {name:"live mirror", url:"https://raw.githubusercontent.com/upbound-web/worldcup-live.json/master/2026/worldcup.json"},
-  {name:"openfootball", url:"https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json"},
-];
-let DATA = null, LOADED_FROM = "";
-
-// completeness: filled-in scores (heavily) + resolved knockout team names
-const feedScore = d => d.matches.reduce((s,m)=>
-  s + (m.score && Array.isArray(m.score.ft) ? 10 : 0)
-    + (NAME_TO_CODE[tname(m.team1)] ? 1 : 0)
-    + (NAME_TO_CODE[tname(m.team2)] ? 1 : 0), 0);
+let MATCHES = new Map(); // espn event id → match object
+let LOADED_FROM = "";
 
 async function loadData(){
-  const results = await Promise.allSettled(FEEDS.map(async f=>{
-    const r = await fetch(f.url + "?t=" + Math.floor(Date.now()/60000), {cache:"no-store"});
+  try{
+    const r = await fetch("data/fixtures.json?t=" + Math.floor(Date.now()/600000), {cache:"no-store"});
     if(!r.ok) throw new Error(r.status);
     const d = await r.json();
     if(!Array.isArray(d.matches) || d.matches.length < 100) throw new Error("bad payload");
-    return {f, d};
-  }));
-  const ok = results.filter(x=>x.status==="fulfilled").map(x=>x.value);
-  if(ok.length){
-    ok.sort((a,b)=>feedScore(b.d)-feedScore(a.d) || FEEDS.indexOf(a.f)-FEEDS.indexOf(b.f));
-    DATA = ok[0].d; LOADED_FROM = ok[0].f.name;
-  } else {
-    try{
-      const r = await fetch("data/worldcup.json");
-      DATA = await r.json(); LOADED_FROM = "bundled snapshot (live feeds unreachable)";
-    }catch(e){ LOADED_FROM = "no data"; }
+    for(const m of d.matches) if(!MATCHES.has(m.id)) MATCHES.set(m.id, m);
+    LOADED_FROM = `snapshot ${d.generated ? d.generated.slice(0,10) : ""}`;
+  }catch(e){
+    if(!MATCHES.size) LOADED_FROM = "no schedule data";
   }
   render();
 }
+const allMatches = () => [...MATCHES.values()].sort((a,b)=>a.ts-b.ts);
 
 // ============================================================================
-// ESPN live-score overlay
-// ESPN's public scoreboard API (keyless, CORS-open) has scores within minutes
-// of full time and live in-progress scores. The GitHub feeds stay canonical
-// for schedule/bracket; ESPN only fills in scores they don't have yet, plus
-// a live score while a match is running. Quick poll (±1 day window) every
-// 2 min; full-tournament poll on the regular 10-min refresh.
+// ESPN live overlay — keyless, CORS-open scoreboard. Quick poll (±1 day)
+// every 30 s for live scores; full-season sweep on the 10-min refresh (also
+// how newly-drawn knockout fixtures arrive). Joined by event id.
 // ============================================================================
-const ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard";
-let ESPN_MAP = {}; // "CODE1-CODE2|YYYY-MM-DD"(UTC) → {codes, date, state, scores, pens, detail}
-
+const ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/scoreboard";
 async function loadESPN(full){
   try{
     const fmt = d => d.toISOString().slice(0,10).replace(/-/g,"");
     const now = Date.now();
-    const range = full ? "20260611-20260720" : `${fmt(new Date(now-86400000))}-${fmt(new Date(now+86400000))}`;
-    const d = await (await fetch(`${ESPN_URL}?dates=${range}&limit=300`, {cache:"no-store"})).json();
+    const range = full ? "20260901-20270610" : `${fmt(new Date(now-86400000))}-${fmt(new Date(now+86400000))}`;
+    const d = await (await fetch(`${ESPN_URL}?dates=${range}&limit=400`, {cache:"no-store"})).json();
     for(const e of (d.events||[])){
       const c = e.competitions && e.competitions[0]; if(!c) continue;
-      const ent = {date:new Date(e.date), state:c.status?.type?.state, detail:c.status?.type?.shortDetail||"", scores:{}, pens:{}, codes:[]};
+      const sides = {};
       let ok = true;
       for(const x of (c.competitors||[])){
-        const code = NAME_TO_CODE[x.team && x.team.displayName];
-        if(!code){ ok=false; break; }
-        ent.codes.push(code);
-        ent.scores[code] = +x.score;
-        if(x.shootoutScore!=null) ent.pens[code] = +x.shootoutScore;
+        const code = ESPN_TO_CODE[x.team && x.team.displayName];
+        if(!code){ ok=false; break; } // TBD / undrawn slot — skip until real teams
+        sides[x.homeAway] = {code, score: x.score===""||x.score==null?null:+x.score, so: x.shootoutScore==null?null:+x.shootoutScore};
       }
-      if(!ok || ent.codes.length!==2) continue;
-      ESPN_MAP[[...ent.codes].sort().join("-")+"|"+e.date.slice(0,10)] = ent;
+      if(!ok || !sides.home || !sides.away) continue;
+      const st = c.status?.type || {};
+      const prev = MATCHES.get(e.id) || {};
+      const m = {
+        id: e.id,
+        ts: Date.parse(e.date),
+        round: (e.season && e.season.slug) || prev.round || LEAGUE_ROUND,
+        md: prev.md ?? null,
+        home: sides.home.code, away: sides.away.code,
+        hs: sides.home.score, as: sides.away.score,
+        hso: sides.home.so, aso: sides.away.so,
+        state: st.state || "pre",
+        completed: !!st.completed,
+      };
+      if(st.state==="in") m._live = {detail: st.shortDetail || st.detail || "LIVE"};
+      MATCHES.set(e.id, m);
     }
-  }catch(e){ /* overlay is best-effort; feeds still render */ }
+  }catch(e){ /* overlay is best-effort; the snapshot still renders */ }
   render();
 }
 
-// Fill ESPN data into the loaded schedule. Feeds win once they have a score
-// (they're canonical and carry corrections); ESPN covers the gap before that.
-function applyESPN(){
-  if(!DATA) return;
-  const evs = Object.values(ESPN_MAP);
-  if(!evs.length) return;
-  for(const m of DATA.matches){
-    const c1=tcode(m.team1), c2=tcode(m.team2);
-    if(!c1 || !c2) continue;
-    const k=kickoff(m); if(!k) continue;
-    const ev = evs.find(e=>e.codes.includes(c1) && e.codes.includes(c2) && Math.abs(e.date-k) < 36*3600000);
-    if(!ev) continue;
-    if(ev.state==="post" && !(m.score && m.score.ft) && isFinite(ev.scores[c1]) && isFinite(ev.scores[c2])){
-      m.score = {ft:[ev.scores[c1], ev.scores[c2]]};
-      if(ev.pens[c1]!=null) m.score.p = [ev.pens[c1], ev.pens[c2]];
-    }
-    if(ev.state==="in" && isFinite(ev.scores[c1])) m._live = {s:[ev.scores[c1], ev.scores[c2]], detail:ev.detail};
-    else delete m._live;
-  }
-}
-
 // ============================================================================
-// Sofascore deep links — full live + post-match stats per game
-// Sofascore's API is Cloudflare-gated with no CORS, so the browser can't read
-// it; instead the harvest scripts (scripts/harvest-sofascore*) write
-// data/sofascore.json mapping each fixture to its match-page URL. Group games
-// match on both team codes + kickoff within a day; knockout games match on
-// kickoff time alone — it's unique per slot (no two knockout fixtures are within
-// 3.5h, and Sofascore's times match the feed exactly). Undrawn slots are stored
-// as /event/{numeric id} URLs: a slot's slug/customId are minted anew when its
-// teams resolve (the old placeholder URL 404s), but the numeric event id is
-// stable and /event/{id} redirects to the canonical page — so links survive
-// each draw with no re-harvest. Best-effort — if the file is absent/empty,
-// scores just render without a link.
+// Sofascore deep links — data/sofascore.json (harvested; see scripts/) maps
+// each fixture to its match-page URL. Matches on both team codes + kickoff
+// within a day; undrawn knockout slots (stored as /event/{id} with <2 codes)
+// match on kickoff time alone. Best-effort — absent file, no links.
 // ============================================================================
-let SOFA = []; // [{c:[code,code], ts:epochMs, url}]
+let SOFA = [];
 async function loadSofascore(){
   try{
     const r = await fetch("data/sofascore.json?t=" + Math.floor(Date.now()/600000), {cache:"no-store"});
     if(!r.ok) throw new Error(r.status);
     const d = await r.json();
     if(Array.isArray(d.events)) SOFA = d.events;
-  }catch(e){ /* links are optional; page still renders */ }
+  }catch(e){}
   render();
 }
 function sofaUrl(m){
   if(!SOFA.length) return null;
-  const c1=tcode(m.team1), c2=tcode(m.team2), k=kickoff(m);
-  if(!k) return null;
-  // Group + already-resolved matches: exact on both team codes, within the day.
-  if(c1 && c2){
-    const e = SOFA.find(e=>e.c && e.c.includes(c1) && e.c.includes(c2) && Math.abs(e.ts-k) < 36*3600000);
-    if(e) return e.url;
-  }
-  // Knockout slots: kickoff is unique per fixture, so match on time alone — this
-  // is what links a placeholder slot harvested before its teams were drawn.
-  if(!m.group){
-    const e = SOFA.filter(e=>Math.abs(e.ts-k) < 90*60000).sort((a,b)=>Math.abs(a.ts-k)-Math.abs(b.ts-k))[0];
-    if(e) return e.url;
+  const e = SOFA.find(e=>e.c && e.c.length===2 && e.c.includes(m.home) && e.c.includes(m.away) && Math.abs(e.ts-m.ts) < 36*3600000);
+  if(e) return e.url;
+  if(!isLeague(m)){ // undrawn-slot URLs carry <2 codes; kickoff is unique per fixture
+    const x = SOFA.filter(e=>Math.abs(e.ts-m.ts) < 90*60000).sort((a,b)=>Math.abs(a.ts-m.ts)-Math.abs(b.ts-m.ts))[0];
+    if(x) return x.url;
   }
   return null;
 }
@@ -566,421 +425,149 @@ function sofaUrl(m){
 // ============================================================================
 // Match helpers
 // ============================================================================
-const KO_ROUNDS = {"Round of 32":5,"Round of 16":5,"Quarter-final":5,"Semi-final":5,"Final":10};
-const ROUND_ORDER = ["Round of 32","Round of 16","Quarter-final","Semi-final","Match for third place","Final"];
-
-const tname = t => typeof t === "string" ? t : (t && t.name) || "";
-const tcode = t => NAME_TO_CODE[tname(t)] || null;
-
-function kickoff(m){
-  const mt = (m.time||"").match(/(\d{1,2}):(\d{2})\s*UTC([+-]\d{1,2})(?::?(\d{2}))?/);
-  if(!m.date) return null;
-  if(!mt) return new Date(m.date + "T12:00:00Z");
-  const off = (mt[3].length===2 ? mt[3][0]+"0"+mt[3][1] : mt[3]) + ":" + (mt[4]||"00");
-  return new Date(`${m.date}T${mt[1].padStart(2,"0")}:${mt[2]}:00${off}`);
-}
-
-function finalScore(m){ // [a,b] at end of regulation/ET (display), or null
-  const s = m.score||{};
-  for(const k of ["et","en","aet"]) if(Array.isArray(s[k])) return s[k];
-  return Array.isArray(s.ft) ? s.ft : null;
-}
+const kickoff = m => new Date(m.ts);
+function finalScore(m){ return (m.completed && m.hs!=null && m.as!=null) ? [m.hs, m.as] : null; }
 function scoreNote(m){
-  const s = m.score||{};
-  for(const k of ["p","pen","ps"]) if(Array.isArray(s[k])) return `${s[k][0]}–${s[k][1]} pens`;
-  for(const k of ["et","en","aet"]) if(Array.isArray(s[k])) return "AET";
+  if(m.hso!=null && m.aso!=null) return `${m.hso}–${m.aso} pens`;
   return "";
 }
-function winnerIdx(m){ // 0 | 1 | -1 (undecided/draw)
-  const s = m.score||{};
-  for(const k of ["p","pen","ps"]) if(Array.isArray(s[k]) && s[k][0]!==s[k][1]) return s[k][0]>s[k][1] ? 0 : 1;
-  const fs = finalScore(m);
-  if(fs && fs[0]!==fs[1]) return fs[0]>fs[1] ? 0 : 1;
-  return -1;
+function legWinnerIdx(m){ // single leg/league match: 0 | 1 | -1
+  const fs = finalScore(m); if(!fs) return -1;
+  if(m.hso!=null && m.aso!=null && m.hso!==m.aso) return m.hso>m.aso ? 0 : 1;
+  return fs[0]===fs[1] ? -1 : (fs[0]>fs[1] ? 0 : 1);
 }
 function status(m, now){
-  if(finalScore(m)) return "done";
-  const k = kickoff(m); if(!k) return "tbd";
-  if(now >= k && now - k < 150*60000) return "live";
-  if(now >= k) return "await"; // played but feed not yet updated
-  return "up";
+  if(m.completed) return "done";
+  if(m.state==="in") return "live";
+  if(now < m.ts) return "up";
+  return (now - m.ts < 210*60000) ? "await" : "await"; // played but result not in yet
 }
 
 // ============================================================================
-// Scoring engine — per-team actual points from match data
+// Knockout ties — two-legged everywhere except the Final. Legs are paired by
+// round + unordered team pair; the tie winner is decided on aggregate, then
+// the deciding leg's shootout (no away-goals rule since 2021).
 // ============================================================================
-function computeScores(){
-  const T = {}; TEAMS.forEach(t=>T[t.code]={code:t.code, gPts:0, gW:0, gD:0, gL:0, gp:0, gf:0, ga:0, adv:false, koWins:[], pts:0, champion:false, clinchAdv:false, unconf:0});
-  if(!DATA) return T;
-  for(const m of DATA.matches){
-    const c1=tcode(m.team1), c2=tcode(m.team2);
-    if(m.group){ // group stage
-      const fs = finalScore(m);
-      if(!fs || !c1 || !c2) continue;
-      const [a,b]=fs;
-      T[c1].gp++; T[c2].gp++; T[c1].gf+=a; T[c1].ga+=b; T[c2].gf+=b; T[c2].ga+=a;
-      if(a>b){ T[c1].gW++; T[c2].gL++; T[c1].gPts+=3; }
-      else if(a<b){ T[c2].gW++; T[c1].gL++; T[c2].gPts+=3; }
-      else { T[c1].gD++; T[c2].gD++; T[c1].gPts++; T[c2].gPts++; }
-    } else {
-      // a resolved Round-of-32 fixture ⇒ both teams advanced (+4)
-      if(m.round==="Round of 32"){ if(c1) T[c1].adv=true; if(c2) T[c2].adv=true; }
-      const w = winnerIdx(m), wc = w===0?c1 : w===1?c2 : null;
-      if(wc && KO_ROUNDS[m.round]!=null){
-        T[wc].koWins.push(m.round);
-        if(m.round==="Final") T[wc].champion=true;
+function computeTies(ms){
+  const map = {};
+  for(const m of ms){
+    if(isLeague(m)) continue;
+    const km = koMeta(m.round); if(!km) continue;
+    const key = km.key + "|" + [m.home,m.away].sort().join("-");
+    (map[key] = map[key] || {km, legs:[]}).legs.push(m);
+  }
+  const ties = Object.values(map);
+  for(const t of ties){
+    t.legs.sort((a,b)=>a.ts-b.ts);
+    t.a = t.legs[0].home; t.b = t.legs[0].away; // leg-1 home listed first
+    t.agg = {[t.a]:0, [t.b]:0};
+    let played = 0;
+    for(const leg of t.legs){
+      const fs = finalScore(leg); if(!fs) continue;
+      played++;
+      t.agg[leg.home] += fs[0]; t.agg[leg.away] += fs[1];
+    }
+    t.done = played === t.km.legs && t.legs.length === t.km.legs;
+    t.winner = null;
+    if(t.done){
+      if(t.agg[t.a] !== t.agg[t.b]) t.winner = t.agg[t.a] > t.agg[t.b] ? t.a : t.b;
+      else{
+        const last = t.legs[t.legs.length-1], wi = legWinnerIdx(last); // pens live on the deciding leg
+        if(wi>=0) t.winner = wi===0 ? last.home : last.away;
       }
     }
   }
-  const clinched = computeClinch();
+  return ties;
+}
+
+// ============================================================================
+// Scoring engine — per-team actual fantasy points from match data.
+//   league phase: realPts/2 (win 1.5, draw 0.5)
+//   top-8 league finish: +6, banked when every team has played all 8
+//   each won knockout tie: +5 (play-off per PLAYOFF_WIN_PTS; Final +10)
+// ============================================================================
+function computeScores(ms, ties){
+  const T = {}; TEAMS.forEach(t=>T[t.code]={code:t.code, realPts:0, gW:0,gD:0,gL:0, gp:0, gf:0, ga:0,
+    top8:false, koWins:[], koPts:0, pts:0, champion:false, out:false, pos:null});
+  for(const m of ms){
+    if(!isLeague(m)) continue;
+    const fs = finalScore(m); if(!fs) continue;
+    const [a,b]=fs, h=T[m.home], w=T[m.away];
+    h.gp++; w.gp++; h.gf+=a; h.ga+=b; w.gf+=b; w.ga+=a;
+    if(a>b){ h.gW++; w.gL++; h.realPts+=3; }
+    else if(a<b){ w.gW++; h.gL++; w.realPts+=3; }
+    else { h.gD++; w.gD++; h.realPts++; w.realPts++; }
+  }
+  // league table: pts → GD → GF (UEFA; no head-to-head)
+  const table = [...TEAMS].map(t=>T[t.code])
+    .sort((x,y)=> y.realPts-x.realPts || (y.gf-y.ga)-(x.gf-x.ga) || y.gf-x.gf || x.code.localeCompare(y.code));
+  table.forEach((t,i)=>t.pos=i+1);
+  const leagueDone = table.every(t=>t.gp>=8);
+  if(leagueDone){
+    table.forEach(t=>{ t.top8 = t.pos<=8; t.out = t.pos>24; });
+  }
+  for(const tie of ties){
+    if(!tie.done || !tie.winner) continue;
+    const w=T[tie.winner], l=T[tie.winner===tie.a?tie.b:tie.a];
+    w.koWins.push(tie.km);
+    if(tie.km.key==="fin") w.champion=true;
+    l.out = true;
+  }
   for(const c in T){
     const t=T[c];
-    t.pts = t.gPts + (t.adv?4:0) + t.koWins.reduce((s,r)=>s+KO_ROUNDS[r],0);
-    t.clinchAdv = clinched.has(c);
-    t.unconf = (t.clinchAdv && !t.adv) ? 4 : 0; // clinched a KO berth, not yet banked
+    t.koPts = t.koWins.reduce((s,km)=>s+km.pts,0);
+    t.pts = t.realPts/2 + (t.top8?BYE_PTS:0) + t.koPts;
   }
-  return T;
+  return {T, table, leagueDone};
 }
 
 // ============================================================================
-// Clinch detection — teams that have MATHEMATICALLY secured a knockout berth
-// but haven't been credited the +4 yet because the feed hasn't seeded the
-// bracket. A berth is locked two ways, and we detect BOTH:
-//   1. Top-2 group finish — guaranteed across every remaining scoreline, ranked
-//      by the FIFA 2026 within-group tie-breakers (head-to-head first, and
-//      RE-APPLIED within a multi-way tie — see rankGroupBuckets below). Resolvable
-//      only once ≤2 games remain in the group.
-//   2. Best third place — 8 of the 12 third-place teams also advance (top 2 ×12
-//      + 8 thirds = 32). A team guaranteed to finish ≥3rd is through if its third
-//      place can't be bumped out of the top 8. Since a 4-team group's third can
-//      score at most 6 pts (a 7-pt third needs 21 pts among the top 3 > 18 max),
-//      a guaranteed-3rd team on P pts is safe when ≤7 OTHER groups can field a
-//      third that finishes above it. The cross-group third-place tie-breakers are
-//      points → goal difference → goals scored (then fair play, then FIFA ranking,
-//      which the feed can't see). Once a group is FINAL its third's exact GD/GF is
-//      known, so we rank it precisely against other finished groups; an UNFINISHED
-//      group still counts whenever its third can reach ≥P pts, because its GD is
-//      unknowable and could beat us. This is what makes the USA (6 pts, can't drop
-//      below 3rd) clinch before locking top-2, and — via the GD tie-break — what
-//      separates a clinched Bosnia (-1 GD, ≤7 above) from a not-yet-safe Paraguay
-//      (-2 GD, 8 above) on equal points, exactly as ESPN/Silver report.
-// The test is conservative (an exact points-AND-goals tie counts against the team,
-// and unfinished groups are assumed to outrank), so it never over-claims; clinchTop2
-// layers in the goal-tie-broken top-2 cases on top. Cached on the set of finalized
-// group scores so it recomputes only when a result lands.
+// Max points still attainable per manager — an optimistic upper bound:
+// remaining league games at 1.5 each, the 6-pt bye while a top-8 finish is
+// still open, and the deepest possible knockout run from each team's current
+// position, with the champion path (final win + bonus) credited to only ONE
+// of a manager's teams. Unlike the WC version this is not collision-exact
+// (no seeded tree yet); once the knockout bracket exists this can be
+// tightened to the tree DP. Never under-counts.
 // ============================================================================
-const CLINCH_CAP = 9;  // max goals/side per remaining match considered (top-2 test)
-const BEST_THIRDS = 8; // third-place teams that advance to the Round of 32
-let _clinch = {sig:null, set:new Set()};
-function computeClinch(){
-  if(!DATA) return new Set();
-  const byG = {}; let sig = "";
-  for(const m of DATA.matches){
-    if(!m.group) continue;
-    const a=tcode(m.team1), b=tcode(m.team2); if(!a||!b) continue;
-    (byG[m.group] = byG[m.group] || {played:[], rem:[]});
-    const fs = finalScore(m);
-    if(fs){ byG[m.group].played.push({a,b,ga:fs[0],gb:fs[1]}); sig += `${m.group}${a}${fs[0]}-${fs[1]}${b};`; }
-    else byG[m.group].rem.push({a,b});
+function maxLeftForTeam(code, S, ties){
+  const t = S.T[code];
+  if(t.out || t.champion) return {nc:0, ch:0};
+  const remLg = 1.5*Math.max(0, 8 - t.gp);
+  const wonKeys = new Set(t.koWins.map(km=>km.key));
+  if(!S.leagueDone){
+    // best case: top-8 bye, then win R16/QF/SF (+15), final win worth 10 more
+    return {nc: remLg + BYE_PTS + 3*KO_WIN_PTS, ch: remLg + BYE_PTS + 3*KO_WIN_PTS + KO_WIN_PTS + CHAMP_BONUS};
   }
-  if(sig === _clinch.sig) return _clinch.set;
-  const groupTeams = g => TEAMS.filter(t=>"Group "+t.group===g).map(t=>t.code);
-  // Per group: the highest points its eventual third can still reach, plus — for
-  // groups that are DONE — that third's exact overall (pts, GD, GF), so the
-  // cross-group best-third race can be tie-broken on goal difference.
-  const maxThird = {}, thirdStat = {};
-  for(const g in byG){ const teams = groupTeams(g); if(teams.length !== 4) continue;
-    maxThird[g] = maxThirdPts(teams, byG[g].played, byG[g].rem);
-    if(byG[g].rem.length === 0){
-      const c = rankGroup(teams, byG[g].played)[2], s = leagueStats(teams, byG[g].played)[c];
-      thirdStat[g] = {pts:s.pts, gd:s.gf-s.ga, gf:s.gf};
-    }
+  // league done: walk the remaining rounds on this team's path
+  let rem = [];
+  if(t.top8) rem = ["r16","qf","sf","fin"];
+  else if(t.pos<=24) rem = ["po","r16","qf","sf","fin"];
+  rem = rem.filter(k=>!wonKeys.has(k));
+  let nc=0, ch=0;
+  for(const k of rem){
+    const km = KO_META_LIST.find(x=>x.key===k);
+    ch += km.pts;
+    if(k!=="fin") nc += km.pts;
   }
-  // Worst-case count of OTHER groups whose third-place team finishes ABOVE a third
-  // sitting on (pts, gd, gf). A DONE group's third is compared exactly on the FIFA
-  // third-place tie-breakers (points → GD → goals; an exact tie counts against us,
-  // since fair play / FIFA ranking aren't in the feed). An UNFINISHED group counts
-  // whenever its third can still reach ≥ pts — its GD is unknowable, so worst case
-  // it outranks us.
-  const thirdsAbove = (g, pts, gd, gf) => { let n = 0;
-    for(const o in maxThird){ if(o === g) continue;
-      if(o in thirdStat){ const t = thirdStat[o];
-        if(t.pts>pts || (t.pts===pts && (t.gd>gd || (t.gd===gd && t.gf>=gf)))) n++;
-      } else if(maxThird[o] >= pts) n++;
-    }
-    return n;
-  };
-  // Groups whose THIRD-place team has clinched a top-8 berth (finished groups only —
-  // identity and GD fixed). Drives R32 matchup locking via the Annex C table below.
-  const thirdGroups = new Set();
-  for(const g in thirdStat){ const t = thirdStat[g];
-    if(thirdsAbove(g, t.pts, t.gd, t.gf) <= BEST_THIRDS-1) thirdGroups.add(g.replace("Group ","")); }
-  const set = new Set();
-  for(const g in byG){
-    const {played, rem} = byG[g];
-    const teams = groupTeams(g); if(teams.length !== 4) continue;
-    // (1) top-2 lock — only resolvable once ≤2 games remain in the group
-    if(rem.length <= 2) clinchTop2(teams, played, rem).forEach(c=>set.add(c));
-    // (2) berth lock (top-2 or guaranteed best-third) — possible a game earlier
-    if(rem.length <= 3){
-      const competitorsGE = P => Object.keys(maxThird).filter(o=>o!==g && maxThird[o]>=P).length;
-      clinchBerth(teams, played, rem, competitorsGE, (P,gd,gf)=>thirdsAbove(g,P,gd,gf)).forEach(c=>set.add(c));
-    }
+  return {nc, ch};
+}
+function maxPointsLeft(mgrName, S, ties){
+  const codes = ROSTERS[mgrName]||[];
+  let sum=0, bestChampGain=0;
+  for(const c of codes){
+    const {nc, ch} = maxLeftForTeam(c, S, ties);
+    sum += nc;
+    bestChampGain = Math.max(bestChampGain, ch-nc);
   }
-  _clinch = {sig, set, tg:thirdGroups};
-  return set;
+  return sum + bestChampGain;
 }
 
-// FIFA 2026 within-group ranking — head-to-head FIRST, WITH the re-apply rule.
-// When teams are level on points the order is, per the FIFA 2026 regulations (as
-// laid out by the BBC, 2026-06-19): (1) points in the matches among only the level
-// teams — a "mini-league" that for a 3-way tie drops the games against the 4th
-// team; (2) goal difference in those matches; (3) goals scored in them; and
-// crucially, if (1)-(3) separate SOME but not all teams, they are RE-APPLIED to
-// whoever is still level (results against the now-separated teams dropped) before
-// falling to (4) overall goal difference and (5) overall goals. So head-to-head
-// keeps deciding the residual tie instead of leaking into overall GD too early —
-// the bug this replaces. (Fair play, then older FIFA ranking, come next, but we
-// can't see cards.) rankGroupBuckets returns buckets best→worst; each bucket holds
-// teams that nothing we can model separates (a genuine tie), so clinchTop2 can
-// treat a multi-team bucket conservatively.
-function leagueStats(group, matches){            // points/goals over matches WITHIN `group`
-  const S={}; group.forEach(c=>S[c]={pts:0,gf:0,ga:0});
-  for(const m of matches) if(S[m.a] && S[m.b]){
-    S[m.a].gf+=m.ga; S[m.a].ga+=m.gb; S[m.b].gf+=m.gb; S[m.b].ga+=m.ga;
-    if(m.ga>m.gb) S[m.a].pts+=3; else if(m.ga<m.gb) S[m.b].pts+=3; else { S[m.a].pts++; S[m.b].pts++; }
-  }
-  return S;
-}
-// Sort `items` by keyFn (a number, or an array compared left-to-right; higher is
-// better) and split into buckets of equal key, ordered best→worst.
-function bucketsByKey(items, keyFn){
-  const arr = items.map(c=>({c, k:[].concat(keyFn(c))}));
-  arr.sort((x,y)=>{ for(let i=0;i<x.k.length;i++) if(x.k[i]!==y.k[i]) return y.k[i]-x.k[i]; return 0; });
-  const out=[];
-  for(const {c,k} of arr){
-    const last=out[out.length-1];
-    if(last && last.k.every((v,i)=>v===k[i])) last.b.push(c); else out.push({k, b:[c]});
-  }
-  return out.map(o=>o.b);
-}
-function resolveLevel(block, matches, ov){       // order teams already tied on points
-  if(block.length===1) return [block];
-  const H = leagueStats(block, matches);                                  // mini-league among them
-  const hb = bucketsByKey(block, c=>[H[c].pts, H[c].gf-H[c].ga, H[c].gf]); // h2h pts → GD → goals
-  if(hb.length===1) return bucketsByKey(block, c=>[ov[c].gf-ov[c].ga, ov[c].gf]); // can't split → overall
-  return hb.flatMap(bk => resolveLevel(bk, matches, ov));                  // RE-APPLY to whoever's still level
-}
-function rankGroupBuckets(codes, matches){
-  const ov = leagueStats(codes, matches);                                 // overall: every game counts
-  return bucketsByKey(codes, c=>ov[c].pts).flatMap(block => resolveLevel(block, matches, ov));
-}
-const rankGroup = (codes, matches) => rankGroupBuckets(codes, matches).flat();
-
-// Teams guaranteed a top-2 finish across EVERY remaining-scoreline scenario,
-// ranked by the FIFA 2026 rules above. A team is safe only when the teams ranked
-// strictly above it PLUS its own (possibly multi-team, unresolved) tie bucket
-// still fit inside the top two — so a 3-way unbroken tie clinches nobody.
-function clinchTop2(teams, played, rem){
-  const span = CLINCH_CAP+1, perMatch = span*span, total = Math.pow(perMatch, rem.length);
-  const miss = new Set();
-  for(let s=0; s<total; s++){
-    let x=s; const all=played.slice();
-    for(let i=0;i<rem.length;i++){ const cell=x%perMatch; x=(x/perMatch)|0; all.push({a:rem[i].a,b:rem[i].b,ga:(cell/span)|0,gb:cell%span}); }
-    let above=0;
-    for(const bk of rankGroupBuckets(teams, all)){
-      if(above + bk.length > 2) bk.forEach(c=>miss.add(c)); // worst case: ranked last within an unresolved bucket
-      above += bk.length;
-    }
-    if(miss.size === teams.length) break; // no one can clinch — stop
-  }
-  return teams.filter(c=>!miss.has(c));
-}
-
-// Highest points the eventual third-place team can reach (over every remaining
-// win/draw/loss combo — goals are irrelevant to a points ceiling, so this stays
-// cheap at 3^rem). Capped at 6: a 4-team group can't produce a 7-pt third.
-function maxThirdPts(teams, played, rem){
-  const base = {}; teams.forEach(c=>base[c]=0);
-  for(const m of played){ if(m.ga>m.gb)base[m.a]+=3; else if(m.ga<m.gb)base[m.b]+=3; else {base[m.a]++;base[m.b]++;} }
-  const total = Math.pow(3, rem.length); let best = 0;
-  for(let s=0; s<total; s++){
-    let x=s; const pts=Object.assign({}, base);
-    for(let i=0;i<rem.length;i++){ const o=x%3; x=(x/3)|0;
-      if(o===0)pts[rem[i].a]+=3; else if(o===1)pts[rem[i].b]+=3; else {pts[rem[i].a]++;pts[rem[i].b]++;} }
-    const ranked = teams.map(c=>pts[c]).sort((p,q)=>q-p);
-    if(ranked[2] > best) best = ranked[2];
-    if(best >= 6) return 6;
-  }
-  return best;
-}
-
-// Teams that have clinched a knockout berth — guaranteed across EVERY remaining
-// win/draw/loss combo to finish either top-2 OR a top-8 third. Conservative: every
-// point-tie within the group is counted against the team. For the best-third test,
-// once the group is FINAL the team's exact goal difference is known, so it's ranked
-// precisely against other finished groups' thirds via thirdsAbove(P,gd,gf); while
-// the group is still in progress its GD is unknowable, so we fall back to the
-// points-only competitorsGE(P) = how many OTHER groups can still field a third-place
-// team reaching ≥P points. Either way it never over-claims.
-function clinchBerth(teams, played, rem, competitorsGE, thirdsAbove){
-  const base = {}; teams.forEach(c=>base[c]=0);
-  for(const m of played){ if(m.ga>m.gb)base[m.a]+=3; else if(m.ga<m.gb)base[m.b]+=3; else {base[m.a]++;base[m.b]++;} }
-  const done = rem.length === 0, ov = done ? leagueStats(teams, played) : null; // exact GD only when group is final
-  const total = Math.pow(3, rem.length); const miss = new Set();
-  for(let s=0; s<total; s++){
-    let x=s; const pts=Object.assign({}, base);
-    for(let i=0;i<rem.length;i++){ const o=x%3; x=(x/3)|0;
-      if(o===0)pts[rem[i].a]+=3; else if(o===1)pts[rem[i].b]+=3; else {pts[rem[i].a]++;pts[rem[i].b]++;} }
-    for(const X of teams){
-      if(miss.has(X)) continue;
-      const P = pts[X];
-      const above = teams.filter(z=>z!==X && pts[z] >  P).length;
-      const level = teams.filter(z=>z!==X && pts[z] === P).length;
-      const worstRank = above + level + 1; // worst case: every level team sits above X
-      let safe;
-      if(worstRank <= 2) safe = true;                                   // can't drop below 2nd
-      else if(worstRank === 3) safe = done                              // 3rd, but a top-8 third?
-        ? thirdsAbove(P, ov[X].gf-ov[X].ga, ov[X].gf) <= BEST_THIRDS-1   //   GD-exact once group is final
-        : competitorsGE(P) <= BEST_THIRDS-1;                            //   GD unknowable → points-only
-      else safe = false;                                                // could fall to 4th
-      if(!safe) miss.add(X);
-    }
-    if(miss.size === teams.length) break;
-  }
-  return teams.filter(c=>!miss.has(c));
-}
-
-// ============================================================================
-// Round-of-32 matchup resolution — FIFA 2026 third-place assignment (Annex C)
-// The R32 bracket is pre-drawn: each of 8 group-winner slots faces the best third
-// from a fixed set of 5 groups, resolved by FIFA's published 495-row table (Annex C)
-// keyed on WHICH 8 of the 12 groups supply a qualifying third. We embed that table;
-// the instant a slot's opponent is invariant across every still-reachable combination
-// it locks — the same deduction FIFA/outlets use to confirm e.g. USA–Bosnia before the
-// group stage even ends. Reachability is filtered CONSERVATIVELY: a combination counts
-// as possible unless it omits a group whose third has already CLINCHED a top-8 berth,
-// so we lean toward "not locked" and can never show a wrong matchup. As more thirds
-// clinch and group winners resolve, additional matchups light up automatically.
-// ============================================================================
-const R32_SLOT_ORDER = ["A","B","D","E","G","I","K","L"]; // column order within COMBO_BLOB assignments
-const R32_CAND = {A:"CEFHI",B:"EFGIJ",D:"BEFIJ",E:"ABCDF",G:"AEHIJ",I:"CDFGH",K:"DEIJL",L:"EHIJK"};
-const CAND_TO_WINNER = Object.fromEntries(Object.entries(R32_CAND).map(([w,c])=>[c.split("").sort().join(""), w]));
-// 495 rows x 16 chars: 8 qualifying-group letters + 8 assigned third-place letters (in
-// R32_SLOT_ORDER). Verified: covers every C(12,8) combo as a perfect matching within R32_CAND.
-const COMBO_BLOB = "EFGHIJKLEJIFHGLKDFGHIJKLHGIDJFLKDEGHIJKLEJIDHGLKDEFHIJKLEJIDHFLKDEFGIJKLEGIDJFLKDEFGHJKLEGJDHFLKDEFGHIKLEGIDHFLKDEFGHIJLEGJDHFLIDEFGHIJKEGJDHFIKCFGHIJKLHGICJFLKCEGHIJKLEJICHGLKCEFHIJKLEJICHFLKCEFGIJKLEGICJFLKCEFGHJKLEGJCHFLKCEFGHIKLEGICHFLKCEFGHIJLEGJCHFLICEFGHIJKEGJCHFIKCDGHIJKLHGICJDLKCDFHIJKLCJIDHFLKCDFGIJKLCGIDJFLKCDFGHJKLCGJDHFLKCDFGHIKLCGIDHFLKCDFGHIJLCGJDHFLICDFGHIJKCGJDHFIKCDEHIJKLEJICHDLKCDEGIJKLEGICJDLKCDEGHJKLEGJCHDLKCDEGHIKLEGICHDLKCDEGHIJLEGJCHDLICDEGHIJKEGJCHDIKCDEFIJKLCJEDIFLKCDEFHJKLCJEDHFLKCDEFHIKLCEIDHFLKCDEFHIJLCJEDHFLICDEFHIJKCJEDHFIKCDEFGJKLCGEDJFLKCDEFGIKLCGEDIFLKCDEFGIJLCGEDJFLICDEFGIJKCGEDJFIKCDEFGHKLCGEDHFLKCDEFGHJLCGJDHFLECDEFGHJKCGJDHFEKCDEFGHILCGEDHFLICDEFGHIKCGEDHFIKCDEFGHIJCGJDHFEIBFGHIJKLHJBFIGLKBEGHIJKLEJIBHGLKBEFHIJKLEJBFIHLKBEFGIJKLEJBFIGLKBEFGHJKLEJBFHGLKBEFGHIKLEGBFIHLKBEFGHIJLEJBFHGLIBEFGHIJKEJBFHGIKBDGHIJKLHJBDIGLKBDFHIJKLHJBDIFLKBDFGIJKLIGBDJFLKBDFGHJKLHGBDJFLKBDFGHIKLHGBDIFLKBDFGHIJLHGBDJFLIBDFGHIJKHGBDJFIKBDEHIJKLEJBDIHLKBDEGIJKLEJBDIGLKBDEGHJKLEJBDHGLKBDEGHIKLEGBDIHLKBDEGHIJLEJBDHGLIBDEGHIJKEJBDHGIKBDEFIJKLEJBDIFLKBDEFHJKLEJBDHFLKBDEFHIKLEIBDHFLKBDEFHIJLEJBDHFLIBDEFHIJKEJBDHFIKBDEFGJKLEGBDJFLKBDEFGIKLEGBDIFLKBDEFGIJLEGBDJFLIBDEFGIJKEGBDJFIKBDEFGHKLEGBDHFLKBDEFGHJLHGBDJFLEBDEFGHJKHGBDJFEKBDEFGHILEGBDHFLIBDEFGHIKEGBDHFIKBDEFGHIJHGBDJFEIBCGHIJKLHJBCIGLKBCFHIJKLHJBCIFLKBCFGIJKLIGBCJFLKBCFGHJKLHGBCJFLKBCFGHIKLHGBCIFLKBCFGHIJLHGBCJFLIBCFGHIJKHGBCJFIKBCEHIJKLEJBCIHLKBCEGIJKLEJBCIGLKBCEGHJKLEJBCHGLKBCEGHIKLEGBCIHLKBCEGHIJLEJBCHGLIBCEGHIJKEJBCHGIKBCEFIJKLEJBCIFLKBCEFHJKLEJBCHFLKBCEFHIKLEIBCHFLKBCEFHIJLEJBCHFLIBCEFHIJKEJBCHFIKBCEFGJKLEGBCJFLKBCEFGIKLEGBCIFLKBCEFGIJLEGBCJFLIBCEFGIJKEGBCJFIKBCEFGHKLEGBCHFLKBCEFGHJLHGBCJFLEBCEFGHJKHGBCJFEKBCEFGHILEGBCHFLIBCEFGHIKEGBCHFIKBCEFGHIJHGBCJFEIBCDHIJKLHJBCIDLKBCDGIJKLIGBCJDLKBCDGHJKLHGBCJDLKBCDGHIKLHGBCIDLKBCDGHIJLHGBCJDLIBCDGHIJKHGBCJDIKBCDFIJKLCJBDIFLKBCDFHJKLCJBDHFLKBCDFHIKLCIBDHFLKBCDFHIJLCJBDHFLIBCDFHIJKCJBDHFIKBCDFGJKLCGBDJFLKBCDFGIKLCGBDIFLKBCDFGIJLCGBDJFLIBCDFGIJKCGBDJFIKBCDFGHKLCGBDHFLKBCDFGHJLCGBDHFLJBCDFGHJKHGBCJFDKBCDFGHILCGBDHFLIBCDFGHIKCGBDHFIKBCDFGHIJHGBCJFDIBCDEIJKLEJBCIDLKBCDEHJKLEJBCHDLKBCDEHIKLEIBCHDLKBCDEHIJLEJBCHDLIBCDEHIJKEJBCHDIKBCDEGJKLEGBCJDLKBCDEGIKLEGBCIDLKBCDEGIJLEGBCJDLIBCDEGIJKEGBCJDIKBCDEGHKLEGBCHDLKBCDEGHJLHGBCJDLEBCDEGHJKHGBCJDEKBCDEGHILEGBCHDLIBCDEGHIKEGBCHDIKBCDEGHIJHGBCJDEIBCDEFJKLCJBDEFLKBCDEFIKLCEBDIFLKBCDEFIJLCJBDEFLIBCDEFIJKCJBDEFIKBCDEFHKLCEBDHFLKBCDEFHJLCJBDHFLEBCDEFHJKCJBDHFEKBCDEFHILCEBDHFLIBCDEFHIKCEBDHFIKBCDEFHIJCJBDHFEIBCDEFGKLCGBDEFLKBCDEFGJLCGBDJFLEBCDEFGJKCGBDJFEKBCDEFGILCGBDEFLIBCDEFGIKCGBDEFIKBCDEFGIJCGBDJFEIBCDEFGHLCGBDHFLEBCDEFGHKCGBDHFEKBCDEFGHJHGBCJFDEBCDEFGHICGBDHFEIAFGHIJKLHJIFAGLKAEGHIJKLEJIAHGLKAEFHIJKLEJIFAHLKAEFGIJKLEJIFAGLKAEFGHJKLEGJFAHLKAEFGHIKLEGIFAHLKAEFGHIJLEGJFAHLIAEFGHIJKEGJFAHIKADGHIJKLHJIDAGLKADFHIJKLHJIDAFLKADFGIJKLIGJDAFLKADFGHJKLHGJDAFLKADFGHIKLHGIDAFLKADFGHIJLHGJDAFLIADFGHIJKHGJDAFIKADEHIJKLEJIDAHLKADEGIJKLEJIDAGLKADEGHJKLEGJDAHLKADEGHIKLEGIDAHLKADEGHIJLEGJDAHLIADEGHIJKEGJDAHIKADEFIJKLEJIDAFLKADEFHJKLHJEDAFLKADEFHIKLHEIDAFLKADEFHIJLHJEDAFLIADEFHIJKHJEDAFIKADEFGJKLEGJDAFLKADEFGIKLEGIDAFLKADEFGIJLEGJDAFLIADEFGIJKEGJDAFIKADEFGHKLHGEDAFLKADEFGHJLHGJDAFLEADEFGHJKHGJDAFEKADEFGHILHGEDAFLIADEFGHIKHGEDAFIKADEFGHIJHGJDAFEIACGHIJKLHJICAGLKACFHIJKLHJICAFLKACFGIJKLIGJCAFLKACFGHJKLHGJCAFLKACFGHIKLHGICAFLKACFGHIJLHGJCAFLIACFGHIJKHGJCAFIKACEHIJKLEJICAHLKACEGIJKLEJICAGLKACEGHJKLEGJCAHLKACEGHIKLEGICAHLKACEGHIJLEGJCAHLIACEGHIJKEGJCAHIKACEFIJKLEJICAFLKACEFHJKLHJECAFLKACEFHIKLHEICAFLKACEFHIJLHJECAFLIACEFHIJKHJECAFIKACEFGJKLEGJCAFLKACEFGIKLEGICAFLKACEFGIJLEGJCAFLIACEFGIJKEGJCAFIKACEFGHKLHGECAFLKACEFGHJLHGJCAFLEACEFGHJKHGJCAFEKACEFGHILHGECAFLIACEFGHIKHGECAFIKACEFGHIJHGJCAFEIACDHIJKLHJICADLKACDGIJKLIGJCADLKACDGHJKLHGJCADLKACDGHIKLHGICADLKACDGHIJLHGJCADLIACDGHIJKHGJCADIKACDFIJKLCJIDAFLKACDFHJKLHJFCADLKACDFHIKLHFICADLKACDFHIJLHJFCADLIACDFHIJKHJFCADIKACDFGJKLCGJDAFLKACDFGIKLCGIDAFLKACDFGIJLCGJDAFLIACDFGIJKCGJDAFIKACDFGHKLHGFCADLKACDFGHJLCGJDAFLHACDFGHJKHGJCAFDKACDFGHILHGFCADLIACDFGHIKHGFCADIKACDFGHIJHGJCAFDIACDEIJKLEJICADLKACDEHJKLHJECADLKACDEHIKLHEICADLKACDEHIJLHJECADLIACDEHIJKHJECADIKACDEGJKLEGJCADLKACDEGIKLEGICADLKACDEGIJLEGJCADLIACDEGIJKEGJCADIKACDEGHKLHGECADLKACDEGHJLHGJCADLEACDEGHJKHGJCADEKACDEGHILHGECADLIACDEGHIKHGECADIKACDEGHIJHGJCADEIACDEFJKLCJEDAFLKACDEFIKLCEIDAFLKACDEFIJLCJEDAFLIACDEFIJKCJEDAFIKACDEFHKLHEFCADLKACDEFHJLHJFCADLEACDEFHJKHJECAFDKACDEFHILHEFCADLIACDEFHIKHEFCADIKACDEFHIJHJECAFDIACDEFGKLCGEDAFLKACDEFGJLCGJDAFLEACDEFGJKCGJDAFEKACDEFGILCGEDAFLIACDEFGIKCGEDAFIKACDEFGIJCGJDAFEIACDEFGHLHGFCADLEACDEFGHKHGECAFDKACDEFGHJHGJCAFDEACDEFGHIHGECAFDIABGHIJKLHJBAIGLKABFHIJKLHJBAIFLKABFGIJKLIJBFAGLKABFGHJKLHJBFAGLKABFGHIKLHGBAIFLKABFGHIJLHJBFAGLIABFGHIJKHJBFAGIKABEHIJKLEJBAIHLKABEGIJKLEJBAIGLKABEGHJKLEJBAHGLKABEGHIKLEGBAIHLKABEGHIJLEJBAHGLIABEGHIJKEJBAHGIKABEFIJKLEJBAIFLKABEFHJKLEJBFAHLKABEFHIKLEIBFAHLKABEFHIJLEJBFAHLIABEFHIJKEJBFAHIKABEFGJKLEJBFAGLKABEFGIKLEGBAIFLKABEFGIJLEJBFAGLIABEFGIJKEJBFAGIKABEFGHKLEGBFAHLKABEFGHJLHJBFAGLEABEFGHJKHJBFAGEKABEFGHILEGBFAHLIABEFGHIKEGBFAHIKABEFGHIJHJBFAGEIABDHIJKLIJBDAHLKABDGIJKLIJBDAGLKABDGHJKLHJBDAGLKABDGHIKLIGBDAHLKABDGHIJLHJBDAGLIABDGHIJKHJBDAGIKABDFIJKLIJBDAFLKABDFHJKLHJBDAFLKABDFHIKLHIBDAFLKABDFHIJLHJBDAFLIABDFHIJKHJBDAFIKABDFGJKLFJBDAGLKABDFGIKLIGBDAFLKABDFGIJLFJBDAGLIABDFGIJKFJBDAGIKABDFGHKLHGBDAFLKABDFGHJLHGBDAFLJABDFGHJKHGBDAFJKABDFGHILHGBDAFLIABDFGHIKHGBDAFIKABDFGHIJHGBDAFIJABDEIJKLEJBAIDLKABDEHJKLEJBDAHLKABDEHIKLEIBDAHLKABDEHIJLEJBDAHLIABDEHIJKEJBDAHIKABDEGJKLEJBDAGLKABDEGIKLEGBAIDLKABDEGIJLEJBDAGLIABDEGIJKEJBDAGIKABDEGHKLEGBDAHLKABDEGHJLHJBDAGLEABDEGHJKHJBDAGEKABDEGHILEGBDAHLIABDEGHIKEGBDAHIKABDEGHIJHJBDAGEIABDEFJKLEJBDAFLKABDEFIKLEIBDAFLKABDEFIJLEJBDAFLIABDEFIJKEJBDAFIKABDEFHKLHEBDAFLKABDEFHJLHJBDAFLEABDEFHJKHJBDAFEKABDEFHILHEBDAFLIABDEFHIKHEBDAFIKABDEFHIJHJBDAFEIABDEFGKLEGBDAFLKABDEFGJLEGBDAFLJABDEFGJKEGBDAFJKABDEFGILEGBDAFLIABDEFGIKEGBDAFIKABDEFGIJEGBDAFIJABDEFGHLHGBDAFLEABDEFGHKHGBDAFEKABDEFGHJHGBDAFEJABDEFGHIHGBDAFEIABCHIJKLIJBCAHLKABCGIJKLIJBCAGLKABCGHJKLHJBCAGLKABCGHIKLIGBCAHLKABCGHIJLHJBCAGLIABCGHIJKHJBCAGIKABCFIJKLIJBCAFLKABCFHJKLHJBCAFLKABCFHIKLHIBCAFLKABCFHIJLHJBCAFLIABCFHIJKHJBCAFIKABCFGJKLCJBFAGLKABCFGIKLIGBCAFLKABCFGIJLCJBFAGLIABCFGIJKCJBFAGIKABCFGHKLHGBCAFLKABCFGHJLHGBCAFLJABCFGHJKHGBCAFJKABCFGHILHGBCAFLIABCFGHIKHGBCAFIKABCFGHIJHGBCAFIJABCEIJKLEJBAICLKABCEHJKLEJBCAHLKABCEHIKLEIBCAHLKABCEHIJLEJBCAHLIABCEHIJKEJBCAHIKABCEGJKLEJBCAGLKABCEGIKLEGBAICLKABCEGIJLEJBCAGLIABCEGIJKEJBCAGIKABCEGHKLEGBCAHLKABCEGHJLHJBCAGLEABCEGHJKHJBCAGEKABCEGHILEGBCAHLIABCEGHIKEGBCAHIKABCEGHIJHJBCAGEIABCEFJKLEJBCAFLKABCEFIKLEIBCAFLKABCEFIJLEJBCAFLIABCEFIJKEJBCAFIKABCEFHKLHEBCAFLKABCEFHJLHJBCAFLEABCEFHJKHJBCAFEKABCEFHILHEBCAFLIABCEFHIKHEBCAFIKABCEFHIJHJBCAFEIABCEFGKLEGBCAFLKABCEFGJLEGBCAFLJABCEFGJKEGBCAFJKABCEFGILEGBCAFLIABCEFGIKEGBCAFIKABCEFGIJEGBCAFIJABCEFGHLHGBCAFLEABCEFGHKHGBCAFEKABCEFGHJHGBCAFEJABCEFGHIHGBCAFEIABCDIJKLIJBCADLKABCDHJKLHJBCADLKABCDHIKLHIBCADLKABCDHIJLHJBCADLIABCDHIJKHJBCADIKABCDGJKLCJBDAGLKABCDGIKLIGBCADLKABCDGIJLCJBDAGLIABCDGIJKCJBDAGIKABCDGHKLHGBCADLKABCDGHJLHGBCADLJABCDGHJKHGBCADJKABCDGHILHGBCADLIABCDGHIKHGBCADIKABCDGHIJHGBCADIJABCDFJKLCJBDAFLKABCDFIKLCIBDAFLKABCDFIJLCJBDAFLIABCDFIJKCJBDAFIKABCDFHKLHFBCADLKABCDFHJLCJBDAFLHABCDFHJKHJBCAFDKABCDFHILHFBCADLIABCDFHIKHFBCADIKABCDFHIJHJBCAFDIABCDFGKLCGBDAFLKABCDFGJLCGBDAFLJABCDFGJKCGBDAFJKABCDFGILCGBDAFLIABCDFGIKCGBDAFIKABCDFGIJCGBDAFIJABCDFGHLCGBDAFLHABCDFGHKHGBCAFDKABCDFGHJHGBCAFDJABCDFGHIHGBCAFDIABCDEJKLEJBCADLKABCDEIKLEIBCADLKABCDEIJLEJBCADLIABCDEIJKEJBCADIKABCDEHKLHEBCADLKABCDEHJLHJBCADLEABCDEHJKHJBCADEKABCDEHILHEBCADLIABCDEHIKHEBCADIKABCDEHIJHJBCADEIABCDEGKLEGBCADLKABCDEGJLEGBCADLJABCDEGJKEGBCADJKABCDEGILEGBCADLIABCDEGIKEGBCADIKABCDEGIJEGBCADIJABCDEGHLHGBCADLEABCDEGHKHGBCADEKABCDEGHJHGBCADEJABCDEGHIHGBCADEIABCDEFKLCEBDAFLKABCDEFJLCJBDAFLEABCDEFJKCJBDAFEKABCDEFILCEBDAFLIABCDEFIKCEBDAFIKABCDEFIJCJBDAFEIABCDEFHLHFBCADLEABCDEFHKHEBCAFDKABCDEFHJHJBCAFDEABCDEFHIHEBCAFDIABCDEFGLCGBDAFLEABCDEFGKCGBDAFEKABCDEFGJCGBDAFEJABCDEFGICGBDAFEIABCDEFGHHGBCAFDE";
-const COMBO_MATRIX = (()=>{ const o=[]; for(let i=0;i<COMBO_BLOB.length;i+=16) o.push({q:COMBO_BLOB.slice(i,i+8), a:COMBO_BLOB.slice(i+8,i+16)}); return o; })();
-
-// The third-place GROUP locked into a winner-slot, or null if it still varies. mustIn =
-// groups whose third has CLINCHED (must appear in every real combo); mustOut = groups whose
-// third is ELIMINATED (can appear in none). Any combo not ruled out is treated as reachable,
-// so this can only under-claim a lock, never over-claim.
-function lockedThirdGroup(winnerLetter, mustIn, mustOut){
-  const idx = R32_SLOT_ORDER.indexOf(winnerLetter); if(idx < 0) return null;
-  let val = null;
-  for(const row of COMBO_MATRIX){
-    let reachable = true;
-    for(const g of mustIn) if(!row.q.includes(g)){ reachable = false; break; }   // omits a clinched third
-    if(reachable && mustOut) for(const g of mustOut) if(row.q.includes(g)){ reachable = false; break; } // contains an eliminated third
-    if(!reachable) continue;
-    const a = row.a[idx];
-    if(val === null) val = a; else if(val !== a) return null; // assignment not invariant -> unlocked
-  }
-  return val;
-}
-function clinchedThirdGroups(){ computeClinch(); return _clinch.tg || new Set(); }
-
-// Minimum points a group's eventual third-place team can still finish on (cheap 3^rem
-// points sweep; mirror of maxThirdPts). Used to spot thirds GUARANTEED above another.
-function minThirdPts(teams, played, rem){
-  const base = {}; teams.forEach(c=>base[c]=0);
-  for(const m of played){ if(m.ga>m.gb)base[m.a]+=3; else if(m.ga<m.gb)base[m.b]+=3; else {base[m.a]++;base[m.b]++;} }
-  const total = Math.pow(3, rem.length); let best = Infinity;
-  for(let s=0; s<total; s++){ let x=s; const pts=Object.assign({}, base);
-    for(let i=0;i<rem.length;i++){ const o=x%3; x=(x/3)|0;
-      if(o===0)pts[rem[i].a]+=3; else if(o===1)pts[rem[i].b]+=3; else {pts[rem[i].a]++;pts[rem[i].b]++;} }
-    const r = teams.map(c=>pts[c]).sort((p,q)=>q-p); if(r[2] < best) best = r[2];
-  }
-  return best===Infinity ? 0 : best;
-}
-// Groups whose third CANNOT reach the top 8 in any remaining scenario (must be absent from
-// every real combo). Sound: counts only thirds GUARANTEED strictly above — a finished group's
-// third with strictly-better fixed stats, or an unfinished group whose MINIMUM third points
-// already exceed. An exact (pts,GD,GF) tie is NOT counted (fair play / FIFA ranking decide it,
-// unseen), so elimination is never over-claimed. Finished groups only.
-function eliminatedThirdGroups(){
-  if(!DATA) return new Set();
-  const byG = {};
-  for(const m of DATA.matches){ if(!m.group) continue; const a=tcode(m.team1), b=tcode(m.team2); if(!a||!b) continue;
-    (byG[m.group] = byG[m.group] || {played:[], rem:[]}); const fs=finalScore(m);
-    if(fs) byG[m.group].played.push({a,b,ga:fs[0],gb:fs[1]}); else byG[m.group].rem.push({a,b}); }
-  const minPts = {}, thirdStat = {};
-  for(const g in byG){ const teams = groupLetterCodes(g.replace("Group ","")); if(teams.length !== 4) continue;
-    minPts[g] = minThirdPts(teams, byG[g].played, byG[g].rem);
-    if(byG[g].rem.length === 0){ const c = rankGroup(teams, byG[g].played)[2], s = leagueStats(teams, byG[g].played)[c];
-      thirdStat[g] = {pts:s.pts, gd:s.gf-s.ga, gf:s.gf}; } }
-  const out = new Set();
-  for(const g in thirdStat){ const X = thirdStat[g]; let above = 0;
-    for(const o in minPts){ if(o === g) continue;
-      if(o in thirdStat){ const t = thirdStat[o];
-        if(t.pts>X.pts || (t.pts===X.pts && (t.gd>X.gd || (t.gd===X.gd && t.gf>X.gf)))) above++; } // strict guaranteed-above
-      else if(minPts[o] > X.pts) above++; }                                                          // unfinished, guaranteed on points
-    if(above >= BEST_THIRDS) out.add(g.replace("Group ","")); }
-  return out;
-}
-
-// Resolve the feed's pre-draw bracket placeholders ("1D", "2A", "3B/E/F/I/J") to teams.
-function r32GroupPlayed(){ const gp = {}; for(const m of DATA.matches){ if(!m.group) continue;
-  const a = tcode(m.team1), b = tcode(m.team2), fs = finalScore(m);
-  if(a && b && fs) (gp[m.group] = gp[m.group] || []).push({a, b, ga:fs[0], gb:fs[1]}); } return gp; }
-const groupLetterCodes = letter => TEAMS.filter(t => t.group === letter).map(t => t.code);
-// The not-yet-played fixtures of a 4-team group (round robin minus what's played).
-function groupRemaining(teams, played){
-  const seen = new Set(played.map(m=>[m.a,m.b].slice().sort().join("-"))); const rem = [];
-  for(let i=0;i<teams.length;i++) for(let j=i+1;j<teams.length;j++){
-    const k=[teams[i],teams[j]].slice().sort().join("-"); if(!seen.has(k)) rem.push({a:teams[i],b:teams[j]}); }
-  return rem;
-}
-// Ranking buckets (best->worst, ties grouped) -> [code per rank], null where a tie spans the rank.
-function positionsFromBuckets(buckets, n){ const pos = new Array(n).fill(null); let rank = 0;
-  for(const b of buckets){ if(b.length===1) pos[rank] = b[0]; rank += b.length; } return pos; }
-// [1st,2nd,3rd,4th] codes, each the team LOCKED into that rank across EVERY remaining scoreline
-// (null where still undecided). Enumerates completions like clinchTop2 (capped at rem<=2 to stay
-// cheap); a tie spanning a rank leaves it null. Sound — never names a team for a rank it doesn't
-// hold in some completion.
-function lockedGroupPositions(teams, played, rem){
-  if(rem.length === 0) return positionsFromBuckets(rankGroupBuckets(teams, played), teams.length);
-  if(rem.length > 2) return teams.map(()=>null);
-  const span = CLINCH_CAP+1, perMatch = span*span, total = Math.pow(perMatch, rem.length);
-  const locked = teams.map(()=>undefined); // undefined=unseen, code=candidate, null=conflict
-  for(let s=0; s<total; s++){ let x=s; const all = played.slice();
-    for(let i=0;i<rem.length;i++){ const cell=x%perMatch; x=(x/perMatch)|0; all.push({a:rem[i].a,b:rem[i].b,ga:(cell/span)|0,gb:cell%span}); }
-    const pos = positionsFromBuckets(rankGroupBuckets(teams, all), teams.length);
-    for(let p=0;p<teams.length;p++){ if(locked[p]===null) continue;
-      if(pos[p]===null){ locked[p]=null; continue; }
-      if(locked[p]===undefined) locked[p]=pos[p]; else if(locked[p]!==pos[p]) locked[p]=null; }
-  }
-  return locked.map(v=>v===undefined?null:v);
-}
-// [1st,2nd,3rd,4th] codes; an entry is set only when that rank is locked across all remaining
-// results (null otherwise) — works for finished AND in-progress groups.
-function groupPositions(letter, gp){ const teams = groupLetterCodes(letter), played = gp["Group "+letter] || [];
-  return lockedGroupPositions(teams, played, groupRemaining(teams, played)); }
-// One fixture-side token -> {code, viaLogic} (viaLogic = resolved by our bracket logic), or null.
-function resolveBracketSide(tok, gp, mustIn, mustOut){
-  const named = tcode(tok); if(named) return {code:named, viaLogic:false};
-  const s = (tok||"").replace(/\s+/g,""); let mt;
-  if((mt = /^([12])([A-L])$/.exec(s))){ const o = groupPositions(mt[2], gp); return o[+mt[1]-1] ? {code:o[+mt[1]-1], viaLogic:true} : null; }
-  if((mt = /^3([A-L])$/.exec(s))){ const o = groupPositions(mt[1], gp); return o[2] ? {code:o[2], viaLogic:true} : null; }
-  if(/^3[A-L](\/[A-L])+$/.test(s)){ const w = CAND_TO_WINNER[s.slice(1).split("/").sort().join("")]; if(!w) return null;
-    const Lg = lockedThirdGroup(w, mustIn, mustOut); if(!Lg) return null; const o = groupPositions(Lg, gp); return o[2] ? {code:o[2], viaLogic:true} : null; }
-  return null;
-}
 // ============================================================================
 // Preferences (followed manager + extra teams)
 // ============================================================================
-let prefs = JSON.parse(localStorage.getItem("wcLivePrefs")||"null") || {manager:YOU_DEFAULT, extra:[]};
-function savePrefs(){ localStorage.setItem("wcLivePrefs", JSON.stringify(prefs)); }
+let prefs = JSON.parse(localStorage.getItem("uclLivePrefs")||"null") || {manager:YOU_DEFAULT, extra:[]};
+function savePrefs(){ localStorage.setItem("uclLivePrefs", JSON.stringify(prefs)); }
 function followedCodes(){
   const set = new Set(ROSTERS[prefs.manager]||[]);
   prefs.extra.forEach(c=>set.add(c));
@@ -992,7 +579,6 @@ function followedCodes(){
 // ============================================================================
 let activeTab = "upcoming";
 let expanded = new Set();
-let _r32ctx = null; // {gp, mustIn} cached per render so matchRow can resolve bracket placeholders
 
 const ownerChip = code => {
   const m = OWNER[code] && MGR[OWNER[code]];
@@ -1001,6 +587,7 @@ const ownerChip = code => {
 const fmtDay = d => d.toLocaleDateString([], {weekday:"short", month:"short", day:"numeric"});
 const fmtTime = d => d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
 const fmtDT = d => `${fmtDay(d)} · ${fmtTime(d)}`;
+const fmtPts = x => Number.isInteger(x) ? String(x) : x.toFixed(1); // 1.5-pt league wins → halves
 
 function countdownStr(ms){
   if(ms<=0) return "now";
@@ -1010,18 +597,22 @@ function countdownStr(ms){
   return `${mm}m`;
 }
 
-function matchRow(m, now, followed){
-  let c1=tcode(m.team1), c2=tcode(m.team2), lk1=false, lk2=false;
-  if(!m.group && (!c1||!c2) && _r32ctx){ // fill pre-draw bracket placeholders ("1D", "3B/E/F/I/J", …)
-    if(!c1){ const r=resolveBracketSide(tname(m.team1), _r32ctx.gp, _r32ctx.mustIn, _r32ctx.mustOut); if(r&&r.code){ c1=r.code; lk1=r.viaLogic; } }
-    if(!c2){ const r=resolveBracketSide(tname(m.team2), _r32ctx.gp, _r32ctx.mustIn, _r32ctx.mustOut); if(r&&r.code){ c2=r.code; lk2=r.viaLogic; } }
-  }
+// aggregate note for the second leg of a tie
+function aggNote(m, ties){
+  if(isLeague(m)) return "";
+  const km = koMeta(m.round); if(!km || km.legs<2) return "";
+  const tie = ties.find(t=>t.km===km && ((t.a===m.home&&t.b===m.away)||(t.a===m.away&&t.b===m.home)));
+  if(!tie || tie.legs[0]===m) return "";
+  return finalScore(tie.legs[0]) ? `agg ${tie.agg[m.home]}–${tie.agg[m.away]}` : "";
+}
+
+function matchRow(m, now, followed, ties){
   const st = status(m, now), k = kickoff(m), fs = finalScore(m);
-  const isF = (c1&&followed.has(c1))||(c2&&followed.has(c2));
-  const R32LK = '<span class="r32lock" title="Confirmed from group results + FIFA Annex C bracket — locked before the feed seeds it">🔒</span>';
-  const nm = (c,raw) => c ? `${BY_CODE[c].flag} <span class="nm">${BY_CODE[c].name}</span>` : `<span class="nm" style="color:var(--muted)">${tname(raw)}</span>`;
-  const mid = st==="done" ? `${fs[0]}–${fs[1]}<span class="note">${scoreNote(m)}</span>`
-            : st==="live" ? (m._live ? `${m._live.s[0]}–${m._live.s[1]}<span class="note" style="color:var(--red)">LIVE ${m._live.detail||""}</span>` : `<span class="pill live">LIVE</span>`)
+  const isF = followed.has(m.home)||followed.has(m.away);
+  const nm = c => `${crest(c)} <span class="nm">${BY_CODE[c].name}</span>`;
+  const agg = aggNote(m, ties);
+  const mid = st==="done" ? `${fs[0]}–${fs[1]}<span class="note">${scoreNote(m)||agg}</span>`
+            : st==="live" ? (m.hs!=null ? `${m.hs}–${m.as}<span class="note" style="color:var(--red)">LIVE ${m._live&&m._live.detail||""}</span>` : `<span class="pill live">LIVE</span>`)
             : st==="await" ? `<span class="note" style="font-size:.65rem;color:var(--muted)">awaiting<br>result</span>`
             : "vs";
   const su = (st==="done"||st==="live"||st==="await") ? sofaUrl(m) : null;
@@ -1029,219 +620,77 @@ function matchRow(m, now, followed){
     ? `<a class="sofa" href="${su}" target="_blank" rel="noopener" title="Live stats &amp; summary on Sofascore">${mid}<span class="sofa-ico">↗</span></a>`
     : mid;
   return `<div class="match-row ${isF?"followed":""}">
-    <span class="t t1">${nm(c1,m.team1)}${lk1?R32LK:""} ${c1?ownerChip(c1):""}</span>
+    <span class="t t1">${nm(m.home)} ${ownerChip(m.home)}</span>
     <span class="score">${scoreCell}</span>
-    <span class="t t2">${c2?ownerChip(c2):""} ${nm(c2,m.team2)}${lk2?R32LK:""}</span>
-    <span class="when">${k?`${fmtDay(k)}<br>${fmtTime(k)}`:""}${m.group?`<br><span style="opacity:.7">${m.group.replace("Group ","Grp ")}</span>`:`<br><span style="opacity:.7">${m.round}</span>`}</span>
+    <span class="t t2">${ownerChip(m.away)} ${nm(m.away)}</span>
+    <span class="when">${fmtDay(k)}<br>${fmtTime(k)}<br><span style="opacity:.7">${roundLabel(m)}</span></span>
   </div>`;
-}
-
-// ============================================================================
-// Knockout bracket — split / mirrored. Reuses the same live data + helpers as
-// the match list (winnerIdx incl. penalties, finalScore, status, sofaUrl,
-// ownerChip), so cells light up live and winners advance automatically. The
-// tree is fixed by FIFA match numbers: R32 = 73–88, R16 = 89–96 (Wxx vs Wxx),
-// QF = 97–100, SF = 101–102, third place = 103, Final = 104.
-// ============================================================================
-const BK_CH = {101:[97,98],102:[99,100],97:[89,90],98:[93,94],99:[91,92],100:[95,96],
-  89:[74,77],90:[73,75],93:[83,84],94:[81,82],91:[76,78],92:[79,80],95:[86,88],96:[85,87]};
-const BK_RS = {"Round of 32":"R32","Round of 16":"R16","Quarter-final":"QF","Semi-final":"SF","Match for third place":"3rd","Final":"Final"};
-let BK_NUM = {}; // num -> match, rebuilt each render
-// num -> match, shared by the bracket render AND the max-points walk. Some feeds
-// (the live mirror) leave num null on the Final / third-place match — map by round.
-function buildBkNum(){
-  BK_NUM = {}; if(!DATA) return;
-  for(const m of DATA.matches){ if(m.num!=null) BK_NUM[m.num]=m; }
-  for(const m of DATA.matches){ if(m.group) continue;
-    if(m.round==="Final" && !BK_NUM[104]) BK_NUM[104]=m;
-    else if(m.round==="Match for third place" && !BK_NUM[103]) BK_NUM[103]=m; }
-}
-
-// ============================================================================
-// Max points still attainable — walk the (seeded) knockout bracket.
-// Banked points (group + advance + KO wins so far) are already counted by
-// computeScores; the ONLY points left to win are future KO match wins. With the
-// group stage over and the R32 seeded, the bracket is a fixed tree (BK_CH plus
-// the final at 104), so a manager's exact best case is a DP over that tree: at
-// each match, pick the winner that maximises THAT manager's points. It's
-// collision-aware — when two of a manager's own teams share a subtree only one
-// can advance past their meeting, so a naive per-team sum over-counts (it would
-// pay a manager for both teams reaching the final). Decided matches are locked
-// to their real result (0 points remain below them). The third-place match
-// (unscored) is excluded. Third place isn't in the tree so it never contributes.
-// ============================================================================
-const KO_TREE = {104:[101,102], ...BK_CH}; // full scored bracket incl. the final
-// {mw, ot} = max REMAINING points for `mgr` within subtree(num), given the team
-// advancing out of it is owned by mgr (mw) or by someone else (ot); -Infinity if
-// that outcome is impossible. value(match) is added only for an UNDECIDED win by
-// mgr (a banked win is already in computeScores, so it adds 0 more here).
-function maxKOsubtree(num, mgr){
-  const m = BK_NUM[num]; if(!m) return {mw:-Infinity, ot:0};
-  const kids = KO_TREE[num], V = KO_ROUNDS[m.round], wi = winnerIdx(m);
-  if(wi>=0){ // decided ⇒ whole subtree settled, nothing left; winner's owner is fixed
-    const wc = kids ? (bkWinner(num)||{}).code : (wi===0?bkSide(m.team1).code:bkSide(m.team2).code);
-    return (wc && OWNER[wc]===mgr) ? {mw:0, ot:-Infinity} : {mw:-Infinity, ot:0};
-  }
-  if(!kids){ // undecided R32 leaf ⇒ free choice of winner between its two teams
-    const a=bkSide(m.team1).code, b=bkSide(m.team2).code;
-    const mine  = (a&&OWNER[a]===mgr) || (b&&OWNER[b]===mgr);
-    const other = (!a||OWNER[a]!==mgr) || (!b||OWNER[b]!==mgr);
-    return {mw: mine?V:-Infinity, ot: other?0:-Infinity};
-  }
-  const L=maxKOsubtree(kids[0],mgr), R=maxKOsubtree(kids[1],mgr);
-  const loseL=Math.max(L.mw,L.ot), loseR=Math.max(R.mw,R.ot); // the beaten side keeps its sub-points
-  const mw=Math.max(L.mw+loseR, R.mw+loseL);                   // an mgr team wins this match (+V)
-  const ot=Math.max(L.ot+loseR, R.ot+loseL);                   // a non-mgr team wins this match
-  return {mw: isFinite(mw)?V+mw:-Infinity, ot};
-}
-// Most points `mgr` can still add if every remaining game breaks their way.
-function maxPointsLeft(mgr){
-  if(!DATA || !BK_NUM[104]) return 0;
-  const r = maxKOsubtree(104, mgr), best = Math.max(r.mw, r.ot);
-  return isFinite(best) ? best : 0;
-}
-
-// One bracket-fixture side -> {code, from, kind, viaLogic, raw}; code may be null if undecided.
-function bkSide(tok){
-  const c = tcode(tok); if(c) return {code:c};
-  const s = (tname(tok)||"").replace(/\s+/g,""); let mt;
-  if((mt=/^([WL])(\d+)$/i.exec(s))){
-    const kind=mt[1].toUpperCase(), n=+mt[2], w=bkWinner(n);
-    if(w) return {code: kind==="W"?w.code:w.loser};
-    return {code:null, kind, from:n};
-  }
-  if(_r32ctx){ const r=resolveBracketSide(s, _r32ctx.gp, _r32ctx.mustIn, _r32ctx.mustOut); if(r&&r.code) return {code:r.code, viaLogic:true}; }
-  return {code:null, raw:tname(tok)};
-}
-// {code, loser} once a knockout match is decided (penalties included), else null.
-function bkWinner(num){
-  const m=BK_NUM[num]; if(!m) return null;
-  const a=bkSide(m.team1).code, b=bkSide(m.team2).code; if(!a||!b) return null;
-  const wi=winnerIdx(m); if(wi<0) return null;
-  return {code: wi===0?a:b, loser: wi===0?b:a};
-}
-function bkPen(m,idx){ const s=m.score||{}; for(const k of ["p","pen","ps"]) if(Array.isArray(s[k])) return s[k][idx]; return null; }
-// For an undecided side, name its two feeding teams if both are known.
-function bkContender(side){
-  if(side.kind==="L" && side.from) return `Loser ${side.from}`;
-  if(side.from){ const f=BK_NUM[side.from];
-    if(f){ const a=bkSide(f.team1).code, b=bkSide(f.team2).code;
-      if(a&&b) return `${BY_CODE[a].flag} ${a} <span class="bk-vs">/</span> ${BY_CODE[b].flag} ${b}`; }
-    return `Winner ${side.from}`;
-  }
-  return side.raw || "TBD";
-}
-function bkCell(num, now, followed){
-  const m=BK_NUM[num]; if(!m) return `<div class="bk-cell"></div>`;
-  const sa=bkSide(m.team1), sb=bkSide(m.team2);
-  const st=status(m,now), fs=finalScore(m), wi=(st==="done")?winnerIdx(m):-1;
-  const liveS=(st==="live"&&m._live)?m._live.s:null;
-  const hasFoll=(sa.code&&followed.has(sa.code))||(sb.code&&followed.has(sb.code));
-  const row=(side,idx)=>{
-    const code=side.code, won=(wi===idx), lost=(wi>=0&&wi!==idx);
-    let inner, sc="";
-    if(code) inner=`<span class="bk-fl">${BY_CODE[code].flag}</span><span class="bk-nm" title="${BY_CODE[code].name}">${BY_CODE[code].name}</span>${ownerChip(code)}`;
-    else     inner=`<span class="bk-nm bk-tbd">${bkContender(side)}</span>`;
-    if(st==="done"&&fs){ const p=bkPen(m,idx); sc=`${fs[idx]}${p!=null?`<sup>${p}</sup>`:""}`; }
-    else if(liveS) sc=`${liveS[idx]}`;
-    return `<div class="bk-team ${won?"bk-win":""} ${lost?"bk-lose":""}">${inner}<span class="bk-sc">${sc}</span></div>`;
-  };
-  const k=kickoff(m), su=(st==="done"||st==="live"||st==="await")?sofaUrl(m):null;
-  let mid;
-  if(st==="live") mid=`<span class="bk-liveT">LIVE${m._live&&m._live.detail?" "+m._live.detail:""}</span>`;
-  else if(st==="await") mid="awaiting";
-  else if(st==="done") mid=scoreNote(m)||"FT";
-  else mid=k?fmtDT(k):"TBD";
-  const arrow=su?` <a class="bk-sofa" href="${su}" target="_blank" rel="noopener" title="Live stats &amp; summary on Sofascore">↗</a>`:"";
-  const foot=`<div class="bk-foot"><span class="bk-rnd">${BK_RS[m.round]||""}</span><span class="bk-when">${mid}${arrow}</span></div>`;
-  return `<div class="bk-cell bk-${st}${hasFoll?" bk-hasfoll":""}">${row(sa,0)}${row(sb,1)}${foot}</div>`;
-}
-function bkNode(num, now, followed, champHtml){
-  const isFinal=num===104, kids=isFinal?[101,102]:BK_CH[num];
-  const cw=`<div class="bk-cw${isFinal?" bk-finalwrap":""}">${bkCell(num,now,followed)}</div>`;
-  if(!kids) return `<div class="bk-node bk-leaf">${cw}</div>`;
-  // The final is the tree root: 101/102 feed it, so the top & bottom halves stack
-  // vertically and the champion callout rides alongside it on the right.
-  return `<div class="bk-node bk-branch${isFinal?" bk-root":""}"><div class="bk-feeders">${bkNode(kids[0],now,followed)}${bkNode(kids[1],now,followed)}</div>${cw}${champHtml||""}</div>`;
-}
-function renderBracket(now){
-  const host=document.getElementById("bracket"); if(!host) return;
-  if(!DATA){ host.innerHTML=`<p class="small">Loading…</p>`; return; }
-  buildBkNum();
-  if(!BK_NUM[104]||!BK_NUM[101]||!BK_NUM[102]){ host.innerHTML=`<p class="small">The bracket appears once the knockout fixtures are published in the feed.</p>`; return; }
-  const followed=followedCodes();
-  const champ=bkWinner(104);
-  const champHtml=`<div class="bk-champ">Champion<b>${champ?`${BY_CODE[champ.code].flag} ${BY_CODE[champ.code].name} 🏆`:"to be decided 🏆"}</b></div>`;
-  // Stacked ESPN layout = the whole tree rooted at the final (104 → 101/102): both
-  // halves of the draw run left→right and meet at a centered final on the right.
-  const heads=`<div class="bk-heads"><span>Round of 32</span><span>Round of 16</span><span>Quarterfinals</span><span>Semifinals</span><span>Final</span></div>`;
-  const tree=`<div class="bk-grid">${bkNode(104,now,followed,champHtml)}</div>`;
-  const third=BK_NUM[103]?`<div class="bk-third"><div class="bk-rl bk-rl-muted">Third-place play-off</div><div class="bk-cw">${bkCell(103,now,followed)}</div></div>`:"";
-  host.innerHTML=heads+tree+third;
 }
 
 function render(){
   const now = new Date();
-  applyESPN();
-  buildBkNum(); // bracket-walk (maxPointsLeft) + renderBracket both read BK_NUM
+  const ms = allMatches();
+  const ties = computeTies(ms);
+  const S = computeScores(ms, ties);
+  const T = S.T;
   const followed = followedCodes();
-  const T = computeScores();
-  const ms = DATA ? DATA.matches : [];
-  // R32 matchup resolution context (used by matchRow to fill pre-draw bracket placeholders)
-  _r32ctx = DATA ? {gp:r32GroupPlayed(), mustIn:clinchedThirdGroups(), mustOut:eliminatedThirdGroups()} : null;
 
-  const ageDays = SILVER.asOf ? (now - new Date(SILVER.asOf))/86400000 : null;
-  const silverNote = SILVER.teams
-    ? `odds ${new Date(SILVER.asOf).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}${SILVER.src==="cache"?" (cached)":""}`
-    : "odds: pre-tourn";
-  const stale = (silverChecked && !SILVER.teams) || (ageDays!=null && ageDays>3);
+  const ageDays = OPTA.asOf ? (now - new Date(OPTA.asOf))/86400000 : null;
+  const optaNote = OPTA.teams
+    ? `odds ${new Date(OPTA.asOf).toLocaleString([],{month:"short",day:"numeric"})}${OPTA.src==="cache"?" (cached)":""}`
+    : "odds: pre-draft";
+  const stale = (optaChecked && !OPTA.teams) || (ageDays!=null && ageDays>3);
   const warn = stale ? ` <span class="pill" style="background:#3a3322;color:var(--gold)">⚠ stale${ageDays>3?` ${Math.floor(ageDays)}d`:""}</span>` : "";
-  document.getElementById("updated").innerHTML = DATA ? `${LOADED_FROM} · ${silverNote}${warn} · upd ${fmtTime(now)}` : "loading…";
+  document.getElementById("updated").innerHTML = MATCHES.size ? `${LOADED_FROM} · ${optaNote}${warn} · upd ${fmtTime(now)}` : "loading…";
+
+  document.getElementById("scoringNote").innerHTML =
+    `Scoring: league-phase win 1.5 · draw 0.5 (= half the real table points) · top-8 finish +6 (knockout bye) · each knockout-round win +5${PLAYOFF_WIN_PTS!==KO_WIN_PTS?` (play-off win ${PLAYOFF_WIN_PTS})`:""} · winning the final +10 (5 win + 5 champion bonus). The top-8 bye banks when the league phase completes in January.<br>
+    "Proj" = expected final total under the Opta supercomputer's nightly-updated probabilities (banked results are reflected — resolved rounds go to 0/100%). "vs draft" compares to the draft-day expectation — whose draft is aging well.`;
 
   // --- "On now / Up next" — global, ignores the follow selection
-  const nbName = (c,raw)=> c ? `${BY_CODE[c].flag} ${BY_CODE[c].name} ${ownerChip(c)}` : `<span style="color:var(--muted)">${tname(raw)}</span>`;
+  const nbName = c => `${crest(c)} ${BY_CODE[c].name} ${ownerChip(c)}`;
   const nb = document.getElementById("nowbar");
   const nbLive = ms.filter(m=>{
     const st=status(m,now);
     if(st==="live") return true;
-    if(st==="await"){ const k=kickoff(m); return k && (now-k) < 210*60000; } // ET/pens/result-lag tail
+    if(st==="await") return (now-m.ts) < 210*60000; // ET/pens/result-lag tail
     return false;
-  }).sort((a,b)=>kickoff(a)-kickoff(b));
-  const nbNext = nbLive.length ? [] : ms.filter(m=>status(m,now)==="up").sort((a,b)=>kickoff(a)-kickoff(b)).slice(0,1);
-  if(!DATA){
+  }).sort((a,b)=>a.ts-b.ts);
+  const nbNext = nbLive.length ? [] : ms.filter(m=>status(m,now)==="up").sort((a,b)=>a.ts-b.ts).slice(0,1);
+  if(!MATCHES.size){
     nb.className="nowbar"; nb.innerHTML=`<div class="nb-label">Schedule</div><div class="nb-meta">Loading…</div>`;
   } else if(nbLive.length){
     nb.className="nowbar islive";
     nb.innerHTML = `<div class="nb-label"><span class="pill live">LIVE</span> Happening now</div>` +
       nbLive.map(m=>{
-        const c1=tcode(m.team1), c2=tcode(m.team2), su=sofaUrl(m);
+        const su=sofaUrl(m);
         const arrow = su ? ` <span class="sofa-ico">↗</span>` : "";
-        const inner = m._live
-          ? `<div class="nb-score">${m._live.s[0]}–${m._live.s[1]}<span class="clk">${m._live.detail||"LIVE"}${arrow}</span></div>`
+        const inner = m.hs!=null
+          ? `<div class="nb-score">${m.hs}–${m.as}<span class="clk">${m._live&&m._live.detail||"LIVE"}${arrow}</span></div>`
           : `<div class="nb-when" style="color:var(--red)">in progress${arrow}</div>`;
         const score = su ? `<a class="sofa" href="${su}" target="_blank" rel="noopener" title="Live stats on Sofascore">${inner}</a>` : inner;
         return `<div class="nb-game">
-          <div class="nb-match">${nbName(c1,m.team1)} <span style="color:var(--muted)">vs</span> ${nbName(c2,m.team2)}
-            <div class="nb-meta">${m.group||m.round} · ${m.ground||""}</div></div>
+          <div class="nb-match">${nbName(m.home)} <span style="color:var(--muted)">vs</span> ${nbName(m.away)}
+            <div class="nb-meta">${roundLabel(m)}</div></div>
           ${score}</div>`;
       }).join("");
   } else if(nbNext.length){
-    const m=nbNext[0], c1=tcode(m.team1), c2=tcode(m.team2), k=kickoff(m);
+    const m=nbNext[0], k=kickoff(m);
     nb.className="nowbar";
     nb.innerHTML = `<div class="nb-label">Up next</div>
       <div class="nb-game">
-        <div class="nb-match">${nbName(c1,m.team1)} <span style="color:var(--muted)">vs</span> ${nbName(c2,m.team2)}
-          <div class="nb-meta">${m.group||m.round} · ${m.ground||""} · ${k?`${fmtDay(k)} ${fmtTime(k)} your time`:""}</div></div>
-        <div class="nb-when">${k?`in ${countdownStr(k-now)}`:""}</div>
+        <div class="nb-match">${nbName(m.home)} <span style="color:var(--muted)">vs</span> ${nbName(m.away)}
+          <div class="nb-meta">${roundLabel(m)} · ${fmtDay(k)} ${fmtTime(k)} your time</div></div>
+        <div class="nb-when">in ${countdownStr(m.ts-now)}</div>
       </div>`;
   } else {
     nb.className="nowbar"; nb.innerHTML=`<div class="nb-label">Schedule</div><div class="nb-meta">No matches scheduled.</div>`;
   }
 
   // --- hero: next matches for the followed selection
-  const involves = (m,set)=>{const c1=tcode(m.team1),c2=tcode(m.team2);return (c1&&set.has(c1))||(c2&&set.has(c2));};
+  const involves = (m,set)=>set.has(m.home)||set.has(m.away);
   const future = ms.filter(m=>{const st=status(m,now);return (st==="up"||st==="live")&&involves(m,followed);})
-                   .sort((a,b)=>kickoff(a)-kickoff(b));
+                   .sort((a,b)=>a.ts-b.ts);
   const mgrShort = MGR[prefs.manager].short;
   document.getElementById("heroLabel").innerHTML =
     `Next up for <span style="color:var(--text)">${mgrShort}'s teams</span>` +
@@ -1249,64 +698,55 @@ function render(){
   const heroBody = document.getElementById("heroBody");
   if(future.length){
     const m=future[0], k=kickoff(m), live=status(m,now)==="live";
-    const n = (c,raw) => c?`${BY_CODE[c].flag} ${BY_CODE[c].name}`:tname(raw);
-    const c1=tcode(m.team1), c2=tcode(m.team2);
-    // "then" lines: the next couple of followed games, plus — always — the
-    // next game of each explicitly-followed extra team, so adding a team
-    // visibly changes the banner even when it plays later than your roster.
-    const mkey = x=>x.date+tname(x.team1)+tname(x.team2);
-    const seen = new Set([mkey(m)]);
-    const thenList = future.slice(1,3).filter(x=>!seen.has(mkey(x)) && seen.add(mkey(x)));
+    const n = c => `${crest(c)} ${BY_CODE[c].name}`;
+    const seen = new Set([m.id]);
+    const thenList = future.slice(1,3).filter(x=>!seen.has(x.id) && seen.add(x.id));
     for(const c of prefs.extra){
-      const nm = future.find(x=>involves(x,new Set([c])));
-      if(nm && !seen.has(mkey(nm))){ thenList.push(nm); seen.add(mkey(nm)); }
+      const nm2 = future.find(x=>involves(x,new Set([c])));
+      if(nm2 && !seen.has(nm2.id)){ thenList.push(nm2); seen.add(nm2.id); }
     }
-    thenList.sort((a,b)=>kickoff(a)-kickoff(b));
+    thenList.sort((a,b)=>a.ts-b.ts);
     heroBody.innerHTML = `
-      <div class="match">${live?'<span class="pill live">LIVE</span> ':""}${n(c1,m.team1)} vs ${n(c2,m.team2)}</div>
-      <div class="meta">${m.group||m.round} · ${m.ground||""} · ${fmtDay(k)} ${fmtTime(k)} your time</div>
-      <div class="count">${live ? (m._live ? `In progress — ${m._live.s[0]}–${m._live.s[1]}${m._live.detail?` (${m._live.detail})`:""}` : "In progress") : "Kickoff in "+countdownStr(k-now)}</div>
+      <div class="match">${live?'<span class="pill live">LIVE</span> ':""}${n(m.home)} vs ${n(m.away)}</div>
+      <div class="meta">${roundLabel(m)} · ${fmtDay(k)} ${fmtTime(k)} your time</div>
+      <div class="count">${live ? (m.hs!=null ? `In progress — ${m.hs}–${m.as}${m._live&&m._live.detail?` (${m._live.detail})`:""}` : "In progress") : "Kickoff in "+countdownStr(m.ts-now)}</div>
       ${thenList.map(x=>{
-        const xk=kickoff(x), x1=tcode(x.team1), x2=tcode(x.team2);
-        return `<div class="then-row">Then: <b>${n(x1,x.team1)} vs ${n(x2,x.team2)}</b> · ${fmtDay(xk)} ${fmtTime(xk)} · <span class="cd">in ${countdownStr(xk-now)}</span></div>`;
+        const xk=kickoff(x);
+        return `<div class="then-row">Then: <b>${n(x.home)} vs ${n(x.away)}</b> · ${fmtDay(xk)} ${fmtTime(xk)} · <span class="cd">in ${countdownStr(x.ts-now)}</span></div>`;
       }).join("")}`;
-  } else heroBody.innerHTML = `<p class="small" style="margin-top:4px">No upcoming matches for this selection.</p>`;
+  } else heroBody.innerHTML = `<p class="small" style="margin-top:4px">No upcoming matches for this selection${Object.values(ROSTERS).every(r=>!r.length)?" — rosters land after draft night":""}.</p>`;
 
-  // --- topbar
+  // --- topbar + standings
   const totals = MANAGERS.map(mgr=>{
     const codes=ROSTERS[mgr.name]||[];
     const pts = codes.reduce((s,c)=>s+T[c].pts,0);
-    const maxLeft = maxPointsLeft(mgr.name); // best-case remaining, walking the seeded bracket
+    const maxLeft = maxPointsLeft(mgr.name, S, ties);
     return {mgr, pts, maxLeft, ceiling: pts+maxLeft,
-      unconf:codes.reduce((s,c)=>s+T[c].unconf,0),
-      preEV: codes.reduce((s,c)=>s+BY_CODE[c].preEV,0),
+      preEV: codes.reduce((s,c)=>s+preEvFor(c),0),
       proj:  codes.reduce((s,c)=>s+evFor(c),0)};
   }).sort((a,b)=>b.pts-a.pts || b.proj-a.proj);
-  const myIdx = totals.findIndex(x=>x.mgr.name===prefs.manager);
-  const uBadge = u => u ? ` <span class="unconf" title="Unconfirmed: mathematically clinched a knockout berth (+4) but not yet banked — converts when the bracket is seeded">+${u}</span>` : "";
+  const myIdx = Math.max(0, totals.findIndex(x=>x.mgr.name===prefs.manager));
   const projLeader = [...totals].sort((a,b)=>b.proj-a.proj)[0];
-  const todays = ms.filter(m=>{const k=kickoff(m); return k && k.toDateString()===now.toDateString();});
+  const todays = ms.filter(m=>kickoff(m).toDateString()===now.toDateString());
+  const done = ms.filter(m=>finalScore(m)).length;
   document.getElementById("topbar").innerHTML = `
-    <div class="stat you"><div class="label">${MGR[prefs.manager].short}'s points</div><div class="value">${totals[myIdx].pts}${uBadge(totals[myIdx].unconf)} <span style="font-size:.75rem;color:var(--muted)">(#${myIdx+1}) · proj ${totals[myIdx].proj.toFixed(1)}</span></div></div>
-    <div class="stat"><div class="label">Leader</div><div class="value">${totals[0].mgr.short} · ${totals[0].pts}</div></div>
+    <div class="stat you"><div class="label">${MGR[prefs.manager].short}'s points</div><div class="value">${fmtPts(totals[myIdx].pts)} <span style="font-size:.75rem;color:var(--muted)">(#${myIdx+1}) · proj ${totals[myIdx].proj.toFixed(1)}</span></div></div>
+    <div class="stat"><div class="label">Leader</div><div class="value">${totals[0].mgr.short} · ${fmtPts(totals[0].pts)}</div></div>
     <div class="stat"><div class="label">Projected winner</div><div class="value">${projLeader.mgr.short} · ${projLeader.proj.toFixed(1)}</div></div>
     <div class="stat"><div class="label">Games today</div><div class="value">${todays.length}</div></div>
-    <div class="stat"><div class="label">Results in</div><div class="value">${ms.filter(m=>finalScore(m)).length} / 104</div></div>`;
+    <div class="stat"><div class="label">Results in</div><div class="value">${done} / ${ms.length}</div></div>`;
 
-  // --- standings
   document.getElementById("standings").innerHTML = totals.map((row,i)=>{
     const codes=(ROSTERS[row.mgr.name]||[]).slice().sort((a,b)=>T[b].pts-T[a].pts || evFor(b)-evFor(a));
     const isYou=row.mgr.name===prefs.manager, open=expanded.has(row.mgr.name);
     const delta=row.proj-row.preEV;
-    // Best-case final total = banked + the most still winnable (bracket walk).
-    // Only rendered inside .detail, so it shows only when a row is opened.
-    const maxLine = `Max possible total: <b>${row.ceiling}</b>`;
+    const maxLine = `Max possible total ≤ <b>${fmtPts(row.ceiling)}</b> <span style="opacity:.75">(upper bound — one champion per roster, no bracket collisions yet)</span>`;
     return `<div class="mgr-row ${isYou?"you-row":""} ${open?"open":""}" data-mgr="${row.mgr.name}">
-      <div class="top"><span>#${i+1} <span style="color:${row.mgr.color}">${isYou?"⭐ ":""}${row.mgr.name}</span></span><span class="pts">${row.pts}${uBadge(row.unconf)} <span style="font-size:.7rem;color:var(--muted)">proj ${row.proj.toFixed(1)} <span style="color:${delta>=0?"var(--green)":"var(--red)"}">(${delta>=0?"+":""}${delta.toFixed(1)} vs draft)</span></span></span></div>
-      <div class="teams">${codes.map(c=>`${BY_CODE[c].flag} ${c} ${T[c].pts}`).join(" · ")}</div>
+      <div class="top"><span>#${i+1} <span style="color:${row.mgr.color}">${isYou?"⭐ ":""}${row.mgr.name}</span></span><span class="pts">${fmtPts(row.pts)} <span style="font-size:.7rem;color:var(--muted)">proj ${row.proj.toFixed(1)} <span style="color:${delta>=0?"var(--green)":"var(--red)"}">(${delta>=0?"+":""}${delta.toFixed(1)} vs draft)</span></span></span></div>
+      <div class="teams">${codes.map(c=>`${crest(c)} ${c} ${fmtPts(T[c].pts)}`).join(" · ")||"<i>rosters TBD — draft night pending</i>"}</div>
       <div class="detail"><div class="maxsum">${maxLine}</div><table>
-        <tr><th>Team</th><th>Grp pts</th><th>W-D-L</th><th>Adv</th><th>KO pts</th><th>Banked</th><th>Proj</th></tr>
-        ${codes.map(c=>{const t=T[c];return `<tr><td>${BY_CODE[c].flag} ${BY_CODE[c].name}${t.champion?" 🏆":""}</td><td>${t.gPts}</td><td>${t.gW}-${t.gD}-${t.gL}</td><td>${t.adv?"+4":t.clinchAdv?`<span class="unconf" title="Clinched a knockout berth — +4 unconfirmed until the bracket is seeded">+4</span>`:"—"}</td><td>${t.koWins.length?`<span title="Wins: ${t.koWins.join(", ")}">+${t.koWins.reduce((s,r)=>s+KO_ROUNDS[r],0)}</span>`:"—"}</td><td><b>${t.pts}</b></td><td style="color:var(--muted)">${evFor(c).toFixed(1)}</td></tr>`;}).join("")}
+        <tr><th>Team</th><th>Pos</th><th>Lg pts</th><th>W-D-L</th><th>Bye</th><th>KO pts</th><th>Banked</th><th>Proj</th></tr>
+        ${codes.map(c=>{const t=T[c];return `<tr><td>${crest(c)} ${BY_CODE[c].name}${t.champion?" 🏆":""}</td><td>${t.pos??"—"}</td><td>${fmtPts(t.realPts/2)}</td><td>${t.gW}-${t.gD}-${t.gL}</td><td>${t.top8?"+6":"—"}</td><td>${t.koWins.length?`<span title="Wins: ${t.koWins.map(km=>km.label).join(", ")}">+${t.koPts}</span>`:"—"}</td><td><b>${fmtPts(t.pts)}</b></td><td style="color:var(--muted)">${evFor(c).toFixed(1)}</td></tr>`;}).join("")}
       </table></div>
     </div>`;
   }).join("");
@@ -1315,50 +755,44 @@ function render(){
   const matchesEl = document.getElementById("matches");
   let list = [];
   if(activeTab==="upcoming"){
-    list = ms.filter(m=>["up","live","await"].includes(status(m,now))).sort((a,b)=>kickoff(a)-kickoff(b)).slice(0,24);
+    list = ms.filter(m=>["up","live","await"].includes(status(m,now))).sort((a,b)=>a.ts-b.ts).slice(0,24);
   } else if(activeTab==="results"){
-    list = ms.filter(m=>status(m,now)==="done").sort((a,b)=>kickoff(b)-kickoff(a));
+    list = ms.filter(m=>status(m,now)==="done").sort((a,b)=>b.ts-a.ts);
   } else {
-    list = ms.filter(m=>!m.group).sort((a,b)=>ROUND_ORDER.indexOf(a.round)-ROUND_ORDER.indexOf(b.round) || kickoff(a)-kickoff(b));
+    list = ms.filter(m=>!isLeague(m)).sort((a,b)=>(koMeta(a.round)?.ord||9)-(koMeta(b.round)?.ord||9) || a.ts-b.ts);
   }
   let html="", lastDay="";
   for(const m of list){
-    const k=kickoff(m), day=k?fmtDay(k):"TBD";
-    const head = activeTab==="knockout" ? m.round : day;
+    const k=kickoff(m), day=fmtDay(k);
+    const head = activeTab==="knockout" ? (koMeta(m.round)?.label || m.round) : day;
     if(head!==lastDay){ html+=`<div class="datehead">${head}</div>`; lastDay=head; }
-    html += matchRow(m, now, followed);
+    html += matchRow(m, now, followed, ties);
   }
-  matchesEl.innerHTML = html || `<p class="small">Nothing here yet.</p>`;
+  matchesEl.innerHTML = html || `<p class="small">${activeTab==="knockout"?"Knockout ties appear once they're drawn — play-offs in February, seeded by the league-phase table.":"Nothing here yet."}</p>`;
 
   // --- watch list
-  document.getElementById("watchlist").innerHTML = future.slice(0,8).map(m=>matchRow(m,now,followed)).join("") ||
+  document.getElementById("watchlist").innerHTML = future.slice(0,8).map(m=>matchRow(m,now,followed,ties)).join("") ||
     `<p class="small">No upcoming matches for the selected teams.</p>`;
 
-  // --- groups (ordered by the same FIFA 2026 head-to-head ranking as the clinch logic)
-  const groups={}, gPlayed={};
-  TEAMS.forEach(t=>{(groups[t.group]=groups[t.group]||[]).push(t.code)});
-  for(const m of ms){ if(!m.group) continue; const a=tcode(m.team1), b=tcode(m.team2), fs2=finalScore(m);
-    if(a&&b&&fs2) (gPlayed[m.group]=gPlayed[m.group]||[]).push({a,b,ga:fs2[0],gb:fs2[1]}); }
-  document.getElementById("groups").innerHTML = Object.keys(groups).sort().map(g=>{
-    const rows=rankGroup(groups[g], gPlayed["Group "+g]||[]).map(c=>({c,...T[c]}));
-    return `<div class="gtable"><div class="gname">Group ${g}</div><table>
-      <tr><th>Team</th><th>P</th><th>GD</th><th>Pts</th></tr>
-      ${rows.map((r,i)=>`<tr class="${i<2&&r.gp>0?"q":""}"><td>${BY_CODE[r.c].flag} ${BY_CODE[r.c].name}${r.clinchAdv?`<span class="lock" title="Clinched a knockout berth — top-2 or guaranteed best-third (+4)">🔒</span>`:""} ${ownerChip(r.c)}</td><td>${r.gp}</td><td>${r.gf-r.ga}</td><td><b>${r.gPts}</b></td></tr>`).join("")}
-    </table></div>`;
-  }).join("");
-
-  // --- knockout bracket
-  renderBracket(now);
+  // --- league phase table (single 36-row Swiss table)
+  document.getElementById("lgtable").innerHTML = `<table>
+    <tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr>
+    ${S.table.map((t,i)=>{
+      const band = i===8||i===24 ? "band" : "";
+      const cls = i<8 ? "bye" : i<24 ? "po" : "out";
+      return `<tr class="${cls} ${band}"><td>${i+1}</td><td>${crest(t.code)} ${BY_CODE[t.code].name} ${ownerChip(t.code)}</td><td>${t.gp}</td><td>${t.gW}</td><td>${t.gD}</td><td>${t.gL}</td><td>${t.gf-t.ga}</td><td><b>${t.realPts}</b></td></tr>`;
+    }).join("")}
+  </table>`;
 
   // --- settings widgets
   const mgrSel=document.getElementById("mgrSel");
   if(!mgrSel.options.length){
     mgrSel.innerHTML = MANAGERS.map(m=>`<option value="${m.name}">${m.name}'s teams</option>`).join("");
     const teamSel=document.getElementById("teamSel");
-    teamSel.innerHTML = `<option value="">+ follow a team…</option>` + [...TEAMS].sort((a,b)=>a.name.localeCompare(b.name)).map(t=>`<option value="${t.code}">${t.flag} ${t.name}</option>`).join("");
+    teamSel.innerHTML = `<option value="">+ follow a team…</option>` + [...TEAMS].sort((a,b)=>a.name.localeCompare(b.name)).map(t=>`<option value="${t.code}">${t.name}</option>`).join("");
   }
   mgrSel.value = prefs.manager;
-  document.getElementById("extraChips").innerHTML = prefs.extra.map(c=>`<span class="chip">${BY_CODE[c].flag} ${BY_CODE[c].name} <button data-rm="${c}">✕</button></span>`).join("");
+  document.getElementById("extraChips").innerHTML = prefs.extra.map(c=>`<span class="chip">${crest(c)} ${BY_CODE[c].name} <button data-rm="${c}">✕</button></span>`).join("");
 }
 
 // ============================================================================
@@ -1388,12 +822,12 @@ async function refreshAll(){
   const btn = document.getElementById("refreshBtn");
   refreshing++; btn.classList.add("spinning");
   const minSpin = new Promise(r=>setTimeout(r, 600));   // ensure the spin is visible even on a fast refresh
-  try{ await Promise.allSettled([loadData(), loadSilver(), loadESPN(true), loadSofascore()]); }
+  try{ await Promise.allSettled([loadData(), loadOpta(), loadESPN(true), loadSofascore()]); }
   finally{ await minSpin; if(--refreshing===0) btn.classList.remove("spinning"); }
 }
 document.getElementById("refreshBtn").addEventListener("click", refreshAll);
 document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) refreshAll(); });
-setInterval(refreshAll, 10*60000);            // feeds + odds + full ESPN sweep every 10 min
+setInterval(refreshAll, 10*60000);            // snapshot + odds + full ESPN sweep every 10 min
 setInterval(()=>loadESPN(false), 30000);      // quick ESPN poll (±1 day) for live scores
 setInterval(render, 30000);                   // tick the countdown every 30 s
 refreshAll();

@@ -1,0 +1,40 @@
+name: harvest
+# Refresh data/opta.json (Opta supercomputer probabilities), data/fixtures.json
+# (ESPN schedule/results snapshot), and the draft.html embedded snapshot.
+# Runs daily after Opta's ~06:30 UTC model update; commits only on diff.
+# Each harvester exits non-zero on a broken/partial response, leaving the
+# previous good snapshot in place — so a failed step is skipped, not fatal.
+
+on:
+  schedule:
+    - cron: "45 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Harvest Opta probabilities
+        continue-on-error: true
+        run: python3 scripts/harvest-opta.py
+      - name: Harvest ESPN fixtures
+        continue-on-error: true
+        run: python3 scripts/harvest-fixtures.py
+      - name: Re-embed draft board snapshot
+        continue-on-error: true
+        run: python3 scripts/build-draft-snapshot.py
+      - name: Commit on diff
+        run: |
+          git config user.name "harvest-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/opta.json data/fixtures.json draft.html
+          git diff --cached --quiet && echo "no changes" && exit 0
+          git commit -m "data: nightly harvest $(date -u +%Y-%m-%d)"
+          git push
