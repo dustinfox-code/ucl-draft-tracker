@@ -13,13 +13,15 @@ Bulletin as the prediction engine.
 | League-phase win / draw (8 games) | 1.5 / 0.5 (= half of real table points) |
 | Top-8 league-phase finish (knockout bye) | 6 |
 | Each knockout-round win (tie, not leg) | 5 |
-| Knockout play-off win (Feb, seeds 9–24) | `PLAYOFF_WIN_PTS` (default 5 — commissioner TBD) |
+| Knockout play-off win (Feb, seeds 9–24) | 5 (commissioner-confirmed 2026-09-02) |
 | Winning the final | 10 (5 win + 5 champion bonus) |
 
-`PLAYOFF_WIN_PTS` is a single constant near the top of **both** `draft.html`
-and `index.html` — flip to 0 in both if the commissioner rules the play-off
-round unscored. League fantasy points are exactly half the real table points,
-so totals land on halves (a formatter handles `13.5`).
+Knockout points go to the winner of the **tie** — two-legged everywhere except
+the final, decided on aggregate — never to individual legs. The play-off-win
+value lives in the `PLAYOFF_WIN_PTS` constant near the top of both
+`draft.html` and `index.html` (kept in sync). League fantasy points are
+exactly half the real table points, so totals land on halves (a formatter
+handles `13.5`).
 
 ## What's here
 

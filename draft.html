@@ -131,8 +131,9 @@
 
 // --- League scoring (rules PDF) ---------------------------------------------
 // League fantasy points = half of real table points (win 1.5 / draw 0.5).
-// PLAYOFF_WIN_PTS: does winning the February knockout-round play-off tie pay
-// like a knockout win? Commissioner TBD — default 5, set to 0 if ruled out.
+// PLAYOFF_WIN_PTS: commissioner confirmed 2026-09-02 — advancing from the
+// February knockout-round play-off is a 5-pt knockout win. The tie decides it
+// (aggregate over two legs); the individual legs score nothing on their own.
 const PLAYOFF_WIN_PTS = 5;
 const BYE_PTS = 6, KO_WIN_PTS = 5, CHAMP_BONUS = 5;
 
