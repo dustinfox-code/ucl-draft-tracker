@@ -231,14 +231,16 @@ const MANAGERS = [
 ];
 const YOU_DEFAULT = "Dustin Fox";
 
-// TODO draft night: fill from the league Google Sheet (6 codes per manager).
+// Draft happened 2026-09-02 (snake: Mike, Jordan, Michael, Steve, Dustin,
+// Zane). Codes in pick order per manager. If a trade ever happens, edit here
+// and push.
 const ROSTERS = {
-  "Michael Biedenstein": [],
-  "Mike Weiss":          [],
-  "Zane Truman":         [],
-  "Dustin Fox":          [],
-  "Jordan Butcher":      [],
-  "Steve Patti":         [],
+  "Mike Weiss":          ["PSG","BVB","MUN","PSV","LIL","SAB"],
+  "Jordan Butcher":      ["BAY","AVL","RBL","GAL","VIK","LSK"],
+  "Michael Biedenstein": ["RMA","ATM","BET","VFB","SHK","SLO"],
+  "Steve Patti":         ["MCI","ROM","POR","BRU","LEN","AEK"],
+  "Dustin Fox":          ["ARS","INT","SCP","COM","BOD","SLA"],
+  "Zane Truman":         ["LIV","BAR","NAP","VIL","FEN","FEY"],
 };
 
 // Club master list — keep in sync with data/teams.json and draft.html.

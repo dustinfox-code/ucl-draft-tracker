@@ -34,17 +34,17 @@ handles `13.5`).
   Opta-EV rank and UEFA-coefficient rank — the coefficient is also the
   autodraft order), and an advisory P(win league) Monte Carlo per candidate.
   Boots from an embedded snapshot (draft night never depends on a fetch),
-  upgrades itself from `data/opta.json` when fresher.
-  **TODO after the draft-order lottery:** set `MANAGERS` order + `YOU` in
-  `draft.html`.
+  upgrades itself from `data/opta.json` when fresher. Preserved as-is
+  post-draft (the draft happened 2026-09-02).
 - **`index.html`** — the live tracker: manager standings with banked +
   projected totals, next-match hero/nowbar/watch list, the 36-row league
   phase table (top-8 / play-off / eliminated bands, pts → GD → GF), match
   tabs, and Sofascore deep links. Live scores overlay from ESPN's public
   scoreboard (30 s poll), joined to the bundled schedule **by ESPN event id**.
-  **TODO after draft night:** fill `ROSTERS` in `index.html`, then freeze the
-  draft-day baseline: `cp data/opta.json data/pre-draft.json` (the "vs draft"
-  column compares against it).
+  Rosters from the 2026-09-02 draft are hardcoded in `ROSTERS` — if a trade
+  ever happens, edit that object and push. `data/pre-draft.json` is the
+  frozen draft-day Opta snapshot the "vs draft" column compares against;
+  don't overwrite it.
 - **`data/opta.json`** — harvested Opta probabilities (see below).
 - **`data/fixtures.json`** — ESPN schedule/results snapshot (fallback when
   ESPN is unreachable at view time; the live overlay upserts on top).

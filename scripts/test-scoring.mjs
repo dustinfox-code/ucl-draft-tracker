@@ -134,14 +134,22 @@ const M = (round, home, away, hs, as, opts = {}) => ({
   eq("incomplete tie ignored", A.computeTies([ms[0]])[0].done, false);
 }
 
+// helper: swap a manager's roster for a fixture roster, restoring afterwards
+// (ROSTERS ships with the real drafted teams, so tests must not assume empty)
+const withRoster = (mgr, codes, fn) => {
+  const r = A.ROSTERS[mgr], saved = [...r];
+  r.length = 0; r.push(...codes);
+  try { fn(); } finally { r.length = 0; r.push(...saved); }
+};
+
 // --- 4. optimistic max-points bound ------------------------------------------
 {
-  A.ROSTERS["Dustin Fox"].push("ARS", "BAY", "COM");
   const S = A.computeScores([], []); // season not started
   // per team: 8 games ×1.5 + bye 6 + R16/QF/SF wins 15 = 33; +10 once for a champion
   const want = 3 * (12 + A.BYE_PTS + 3 * A.KO_WIN_PTS) + (A.KO_WIN_PTS + A.CHAMP_BONUS);
-  eq("pre-season max bound", A.maxPointsLeft("Dustin Fox", S, []), want);
-  A.ROSTERS["Dustin Fox"].length = 0;
+  withRoster("Dustin Fox", ["ARS", "BAY", "COM"], () => {
+    eq("pre-season max bound", A.maxPointsLeft("Dustin Fox", S, []), want);
+  });
 }
 
 // --- 5. clinch / elimination bounds (mid-league-phase) ------------------------
@@ -183,16 +191,16 @@ const M = (round, home, away, hs, as, opts = {}) => ({
   eq("out team max = 0", A.maxLeftForTeam(codes[1], S, []).nc, 0);
 
   // --- 6. same-tie collision in the manager max bound -------------------------
-  A.ROSTERS["Dustin Fox"].push(codes[0], codes[2]); // two clinched-top-8 winners
-  const perTeam = A.BYE_PTS + 3*A.KO_WIN_PTS; // 21 each, champ gain +10
-  eq("mgr max, no shared tie", A.maxPointsLeft("Dustin Fox", S, []),
-     2*perTeam + A.KO_WIN_PTS + A.CHAMP_BONUS);
-  const tieLeg = M("round-of-16", codes[0], codes[2], 1, 1);
-  const ties = A.computeTies([tieLeg]);
-  eq("tie undecided", ties[0].done, false);
-  eq("mgr max, roster teams share an undecided tie", A.maxPointsLeft("Dustin Fox", S, ties),
-     perTeam + A.KO_WIN_PTS + A.CHAMP_BONUS);
-  A.ROSTERS["Dustin Fox"].length = 0;
+  withRoster("Dustin Fox", [codes[0], codes[2]], () => { // two clinched-top-8 winners
+    const perTeam = A.BYE_PTS + 3*A.KO_WIN_PTS; // 21 each, champ gain +10
+    eq("mgr max, no shared tie", A.maxPointsLeft("Dustin Fox", S, []),
+       2*perTeam + A.KO_WIN_PTS + A.CHAMP_BONUS);
+    const tieLeg = M("round-of-16", codes[0], codes[2], 1, 1);
+    const ties = A.computeTies([tieLeg]);
+    eq("tie undecided", ties[0].done, false);
+    eq("mgr max, roster teams share an undecided tie", A.maxPointsLeft("Dustin Fox", S, ties),
+       perTeam + A.KO_WIN_PTS + A.CHAMP_BONUS);
+  });
 }
 
 if (failures) { console.error(`\n${failures} scoring failure(s)`); process.exit(1); }
