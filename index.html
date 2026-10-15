@@ -289,7 +289,9 @@ const MGR = Object.fromEntries(MANAGERS.map(m=>[m.name,m]));
 const crest = code => `<img class="crest" src="https://a.espncdn.com/i/teamlogos/soccer/500/${BY_CODE[code].espnId}.png" alt="" loading="lazy">`;
 
 // ESPN displayName → code (join key for the live scoreboard overlay; ESPN
-// abbreviations are traps — their "MUN" is Bayern Munich).
+// abbreviations are traps — their "MUN" is Bayern Munich). Matched
+// case-insensitively via espnCode(): ESPN's casing drifts (Viking became
+// "VIKING FK" in Oct 2026).
 const ESPN_TO_CODE = {
   "AEK Athens":"AEK","AS Roma":"ROM","Arsenal":"ARS","Aston Villa":"AVL",
   "Atlético Madrid":"ATM","Barcelona":"BAR","Bayern Munich":"BAY","Bodo/Glimt":"BOD",
@@ -301,6 +303,8 @@ const ESPN_TO_CODE = {
   "Shakhtar Donetsk":"SHK","Slavia Prague":"SLA","Slovan Bratislava":"SLO","Sporting CP":"SCP",
   "VfB Stuttgart":"VFB","Viking FK":"VIK","Villarreal":"VIL",
 };
+const ESPN_TO_CODE_LC = Object.fromEntries(Object.entries(ESPN_TO_CODE).map(([k,v]) => [k.toLowerCase(), v]));
+const espnCode = name => name ? ESPN_TO_CODE_LC[name.toLowerCase()] : undefined;
 
 // ============================================================================
 // Rounds. ESPN's season.slug names each phase; normalize defensively since
@@ -397,18 +401,23 @@ const allMatches = () => [...MATCHES.values()].sort((a,b)=>a.ts-b.ts);
 // how newly-drawn knockout fixtures arrive). Joined by event id.
 // ============================================================================
 const ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/scoreboard";
+// ESPN 400s YYYYMMDD-YYYYMMDD ranges (since mid-Sept 2026), so the full sweep
+// goes month by month (YYYYMM) and the quick poll day by day (YYYYMMDD).
+// Mirrors SEASON_MONTHS in scripts/harvest-fixtures.py.
+const ESPN_SEASON_MONTHS = ["202609","202610","202611","202612","202701","202702","202703","202704","202705","202706"];
 async function loadESPN(full){
   try{
     const fmt = d => d.toISOString().slice(0,10).replace(/-/g,"");
     const now = Date.now();
-    const range = full ? "20260901-20270610" : `${fmt(new Date(now-86400000))}-${fmt(new Date(now+86400000))}`;
-    const d = await (await fetch(`${ESPN_URL}?dates=${range}&limit=400`, {cache:"no-store"})).json();
-    for(const e of (d.events||[])){
+    const keys = full ? ESPN_SEASON_MONTHS : [-1,0,1].map(k => fmt(new Date(now + k*86400000)));
+    const pages = await Promise.allSettled(keys.map(k =>
+      fetch(`${ESPN_URL}?dates=${k}&limit=400`, {cache:"no-store"}).then(r => r.ok ? r.json() : Promise.reject(r.status))));
+    for(const e of pages.flatMap(p => p.status==="fulfilled" ? (p.value.events||[]) : [])){
       const c = e.competitions && e.competitions[0]; if(!c) continue;
       const sides = {};
       let ok = true;
       for(const x of (c.competitors||[])){
-        const code = ESPN_TO_CODE[x.team && x.team.displayName];
+        const code = espnCode(x.team && x.team.displayName);
         if(!code){ ok=false; break; } // TBD / undrawn slot — skip until real teams
         sides[x.homeAway] = {code, score: x.score===""||x.score==null?null:+x.score, so: x.shootoutScore==null?null:+x.shootoutScore};
       }
