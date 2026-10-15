@@ -29,26 +29,38 @@ OUT = ROOT / "data" / "fixtures.json"
 TEAMS_FILE = ROOT / "data" / "teams.json"
 
 URL = ("https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/"
-       "scoreboard?dates=20260901-20270610&limit=400")
+       "scoreboard?dates={month}&limit=400")
+# Season window, swept one calendar month at a time. ESPN dropped support for
+# YYYYMMDD-YYYYMMDD ranges (400 "Failed to get events endpoint", verified
+# 2026-10-15); single days (YYYYMMDD) and months (YYYYMM) still work. Year
+# queries (YYYY) also work but straddle seasons, so months it is.
+SEASON_MONTHS = ["202609", "202610", "202611", "202612", "202701",
+                 "202702", "202703", "202704", "202705", "202706"]
 
 
 def main() -> None:
+    # Case-insensitive: ESPN's casing drifts (Viking became "VIKING FK" in
+    # Oct 2026) while the name itself stays a safe join key.
     by_espn_name = {
-        t["espn"]: t["code"] for t in json.loads(TEAMS_FILE.read_text())["teams"]
+        t["espn"].casefold(): t["code"] for t in json.loads(TEAMS_FILE.read_text())["teams"]
     }
     # Counterintuitive but verified: ESPN 403s browser User-Agents coming from
     # non-browser TLS stacks, while the honest default Python-urllib UA passes.
-    # Do NOT add a browser UA here.
-    req = urllib.request.Request(URL)
-    data = json.loads(urllib.request.urlopen(req, timeout=30).read())
+    # Do NOT add a browser UA here. Any failed month raises, so a partial
+    # sweep never overwrites the snapshot.
+    events = []
+    for month in SEASON_MONTHS:
+        req = urllib.request.Request(URL.format(month=month))
+        events += json.loads(urllib.request.urlopen(req, timeout=30).read()).get("events", [])
+    events = list({ev["id"]: ev for ev in events}.values())  # month overlap safety
 
     matches, unresolved = [], set()
-    for ev in data.get("events", []):
+    for ev in events:
         comp = ev["competitions"][0]
         sides = {}
         for c in comp["competitors"]:
             name = c["team"].get("displayName")
-            code = by_espn_name.get(name)
+            code = by_espn_name.get((name or "").casefold())
             if not code:
                 unresolved.add(name)
                 continue

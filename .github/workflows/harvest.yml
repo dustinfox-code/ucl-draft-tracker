@@ -3,7 +3,9 @@ name: harvest
 # (ESPN schedule/results snapshot), and the draft.html embedded snapshot.
 # Runs daily after Opta's ~06:30 UTC model update; commits only on diff.
 # Each harvester exits non-zero on a broken/partial response, leaving the
-# previous good snapshot in place — so a failed step is skipped, not fatal.
+# previous good snapshot in place — so a failed step is skipped, not fatal:
+# the good harvests still commit, then the job goes red so the failure is
+# noticed (fixtures.json once went stale for a month behind a green job).
 
 on:
   schedule:
@@ -22,12 +24,15 @@ jobs:
         with:
           python-version: "3.12"
       - name: Harvest Opta probabilities
+        id: opta
         continue-on-error: true
         run: python3 scripts/harvest-opta.py
       - name: Harvest ESPN fixtures
+        id: fixtures
         continue-on-error: true
         run: python3 scripts/harvest-fixtures.py
       - name: Re-embed draft board snapshot
+        id: snapshot
         continue-on-error: true
         run: python3 scripts/build-draft-snapshot.py
       - name: Commit on diff
@@ -38,3 +43,8 @@ jobs:
           git diff --cached --quiet && echo "no changes" && exit 0
           git commit -m "data: nightly harvest $(date -u +%Y-%m-%d)"
           git push
+      - name: Fail if any harvester failed
+        if: steps.opta.outcome == 'failure' || steps.fixtures.outcome == 'failure' || steps.snapshot.outcome == 'failure'
+        run: |
+          echo "::error::harvester outcomes — opta: ${{ steps.opta.outcome }}, fixtures: ${{ steps.fixtures.outcome }}, snapshot: ${{ steps.snapshot.outcome }}"
+          exit 1

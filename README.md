@@ -94,6 +94,11 @@ ESPN's keyless scoreboard is the primary source (there is no openfootball
 Gotcha, verified: **ESPN 403s browser User-Agents sent from non-browser TLS
 stacks** — `scripts/harvest-fixtures.py` deliberately sends no UA. Join ESPN
 teams by `displayName`, never abbreviation (ESPN's "MUN" is Bayern Munich).
+Second gotcha (mid-Sept 2026): ESPN now 400s `dates=YYYYMMDD-YYYYMMDD`
+ranges, so the harvester and the page's full sweep fetch month by month
+(`dates=YYYYMM`) and the 30 s poll fetches single days. `dates=YYYY` works
+too but straddles seasons. The season month list lives in both
+`scripts/harvest-fixtures.py` and `index.html`; keep them in sync.
 
 Two-legged ties (play-off, R16, QF, SF) are paired by round + team pair and
 decided on aggregate, then the deciding leg's shootout (no away-goals rule).
